@@ -99,13 +99,22 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
       return /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu);
     })();
 
+    // Check if tablet or touch device to safeguard WebKit GPU memory ceiling
+    const isTouchOrTablet =
+      typeof window !== 'undefined' &&
+      (('ontouchstart' in window) ||
+        (navigator.maxTouchPoints > 0) ||
+        /iPad|iPhone|Android|Tablet/i.test(navigator.userAgent));
+
     const renderer = new THREE.WebGLRenderer({
-      antialias: !isSoftwareGl,
+      antialias: !isSoftwareGl && !isTouchOrTablet,
       powerPreference: 'high-performance',
       alpha: false,
+      precision: isTouchOrTablet ? 'mediump' : 'highp',
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
+    const maxDpr = isTouchOrTablet ? 1.25 : 1.5;
+    renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, maxDpr));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
@@ -240,18 +249,74 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
 
     scene.add(instrumentGroup);
 
-    // 7. Dynamic Targets Group
+    // 7. Dynamic Targets Pool (Zero per-frame allocations)
     const targetsGroup = new THREE.Group();
+    const sharedTargetSphereGeo = new THREE.SphereGeometry(0.7, 16, 16);
+    const sharedTargetRingGeo = new THREE.RingGeometry(0.85, 1.05, 24);
+
+    const targetSlots = [0, 1, 2, 3, 4, 5].map(() => {
+      const slotGroup = new THREE.Group();
+      const sMat = new THREE.MeshStandardMaterial({
+        color: 0x10b981,
+        transparent: true,
+        opacity: 0.65,
+        emissive: 0x10b981,
+        roughness: 0.3,
+      });
+      const sMesh = new THREE.Mesh(sharedTargetSphereGeo, sMat);
+      slotGroup.add(sMesh);
+
+      const rMat = new THREE.MeshBasicMaterial({
+        color: 0x10b981,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.5,
+      });
+      const rMesh = new THREE.Mesh(sharedTargetRingGeo, rMat);
+      rMesh.rotation.x = Math.PI / 2;
+      slotGroup.add(rMesh);
+
+      slotGroup.visible = false;
+      targetsGroup.add(slotGroup);
+      return { slotGroup, sMesh, sMat, rMesh, rMat };
+    });
     scene.add(targetsGroup);
 
-    // 8. Dynamic Obstacles Group
+    // 8. Dynamic Obstacles Pool (Zero per-frame allocations)
     const obstaclesGroup = new THREE.Group();
+    const sharedBoxGeo = new THREE.BoxGeometry(1, 1, 1);
+    const sharedWireGeo = new THREE.WireframeGeometry(sharedBoxGeo);
+
+    const obstacleSlots = [0, 1, 2, 3, 4].map(() => {
+      const slotGroup = new THREE.Group();
+      const oMat = new THREE.MeshStandardMaterial({
+        color: 0xef4444,
+        transparent: true,
+        opacity: 0.55,
+        roughness: 0.5,
+        metalness: 0.2,
+      });
+      const oMesh = new THREE.Mesh(sharedBoxGeo, oMat);
+      oMesh.castShadow = !isSoftwareGl;
+      slotGroup.add(oMesh);
+
+      const wireMat = new THREE.LineBasicMaterial({
+        color: 0xff8888,
+        linewidth: 1,
+      });
+      const wireMesh = new THREE.LineSegments(sharedWireGeo, wireMat);
+      slotGroup.add(wireMesh);
+
+      slotGroup.visible = false;
+      obstaclesGroup.add(slotGroup);
+      return { slotGroup, oMesh, oMat, wireMesh };
+    });
     scene.add(obstaclesGroup);
 
     // 9. Dynamic Objects Pool (Supports Task 2 and Task 3 multi-color specimens, sized close to gripper tip)
     const objectSlots = [0, 1, 2].map(() => {
       const slotGroup = new THREE.Group();
-      const beadGeo = new THREE.SphereGeometry(0.16, 24, 24);
+      const beadGeo = new THREE.SphereGeometry(0.16, 20, 20);
       const beadMat = new THREE.MeshStandardMaterial({
         color: 0xf59e0b,
         metalness: 0.3,
@@ -275,7 +340,7 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
       slotGroup.add(standMesh);
 
       // Specimen proximity aura ring
-      const ringGeo = new THREE.RingGeometry(0.24, 0.30, 32);
+      const ringGeo = new THREE.RingGeometry(0.24, 0.30, 24);
       const ringMat = new THREE.MeshBasicMaterial({
         color: 0xfbbf24,
         side: THREE.DoubleSide,
@@ -296,6 +361,7 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     const _trocar = new THREE.Vector3(trocarPos.x, trocarPos.y, trocarPos.z);
     const _tip = new THREE.Vector3();
     const _shaftDir = new THREE.Vector3();
+    const _normalizedShaftDir = new THREE.Vector3();
     const _mid = new THREE.Vector3();
     const _up = new THREE.Vector3(0, 1, 0);
 
@@ -313,10 +379,11 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
       const shaftLen = _shaftDir.length();
       _mid.addVectors(_trocar, _tip).multiplyScalar(0.5);
 
-      // Position and orient shaft cylinder
+      // Position and orient shaft cylinder (no clone allocation)
       shaftMesh.scale.set(1, shaftLen, 1);
       shaftMesh.position.copy(_mid);
-      shaftMesh.quaternion.setFromUnitVectors(_up, _shaftDir.clone().normalize());
+      _normalizedShaftDir.copy(_shaftDir).normalize();
+      shaftMesh.quaternion.setFromUnitVectors(_up, _normalizedShaftDir);
 
       // Position wrist knuckle and gripper hub at tip
       wristMesh.position.copy(_tip);
@@ -346,70 +413,47 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
         tipBeacon.scale.setScalar(1.0);
       }
 
+      // Update Target Meshes (Pooled - Zero Allocation)
+      const currentTargets = current.targets || [];
+      targetSlots.forEach((slot, idx) => {
+        const tgt = currentTargets[idx];
+        if (tgt) {
+          slot.slotGroup.visible = true;
+          slot.slotGroup.position.set(tgt.position.x, tgt.position.y, tgt.position.z);
+          const r = tgt.radius || 0.25;
+          slot.sMesh.scale.setScalar(r);
+          slot.rMesh.scale.setScalar(r);
+          slot.rMesh.rotation.z = elapsed * 1.2;
 
-      // Update Target Meshes
-      targetsGroup.clear();
-      current.targets.forEach((tgt) => {
-        const isHighlighted = tgt.id === current.highlightTargetId;
-        const tgtColor = new THREE.Color(tgt.color || 0x10b981);
-
-        // Target central sphere
-        const sGeo = new THREE.SphereGeometry(tgt.radius * 0.7, 16, 16);
-        const sMat = new THREE.MeshStandardMaterial({
-          color: tgtColor,
-          transparent: true,
-          opacity: 0.65,
-          emissive: tgtColor,
-          emissiveIntensity: isHighlighted ? 0.7 + Math.sin(elapsed * 4) * 0.3 : 0.3,
-          roughness: 0.3,
-        });
-        const sMesh = new THREE.Mesh(sGeo, sMat);
-        sMesh.position.set(tgt.position.x, tgt.position.y, tgt.position.z);
-        targetsGroup.add(sMesh);
-
-        // Holographic orbital ring
-        const rGeo = new THREE.RingGeometry(tgt.radius * 0.85, tgt.radius * 1.05, 32);
-        const rMat = new THREE.MeshBasicMaterial({
-          color: tgtColor,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: isHighlighted ? 0.8 : 0.4,
-        });
-        const rMesh = new THREE.Mesh(rGeo, rMat);
-        rMesh.position.set(tgt.position.x, tgt.position.y, tgt.position.z);
-        rMesh.rotation.x = Math.PI / 2;
-        rMesh.rotation.z = elapsed * 1.2;
-        targetsGroup.add(rMesh);
+          const isHighlighted = tgt.id === current.highlightTargetId;
+          const tgtColor = tgt.color || 0x10b981;
+          slot.sMat.color.set(tgtColor);
+          slot.sMat.emissive.set(tgtColor);
+          slot.sMat.emissiveIntensity = isHighlighted ? 0.7 + Math.sin(elapsed * 4) * 0.3 : 0.3;
+          slot.rMat.color.set(tgtColor);
+          slot.rMat.opacity = isHighlighted ? 0.8 : 0.4;
+        } else {
+          slot.slotGroup.visible = false;
+        }
       });
 
-      // Update Obstacle Meshes
-      obstaclesGroup.clear();
-      current.obstacles.forEach((obs) => {
-        const oGeo = new THREE.BoxGeometry(obs.size.x, obs.size.y, obs.size.z);
-        const oMat = new THREE.MeshStandardMaterial({
-          color: obs.color ? new THREE.Color(obs.color) : 0xef4444,
-          transparent: true,
-          opacity: 0.55,
-          roughness: 0.5,
-          metalness: 0.2,
-        });
-        const oMesh = new THREE.Mesh(oGeo, oMat);
-        oMesh.position.set(obs.position.x, obs.position.y, obs.position.z);
-        oMesh.castShadow = !isSoftwareGl;
-        obstaclesGroup.add(oMesh);
-
-        // Warning wireframe outline
-        const wireGeo = new THREE.WireframeGeometry(oGeo);
-        const wireMat = new THREE.LineBasicMaterial({
-          color: 0xff8888,
-          linewidth: 1,
-        });
-        const wireMesh = new THREE.LineSegments(wireGeo, wireMat);
-        wireMesh.position.copy(oMesh.position);
-        obstaclesGroup.add(wireMesh);
+      // Update Obstacle Meshes (Pooled - Zero Allocation)
+      const currentObstacles = current.obstacles || [];
+      obstacleSlots.forEach((slot, idx) => {
+        const obs = currentObstacles[idx];
+        if (obs) {
+          slot.slotGroup.visible = true;
+          slot.slotGroup.position.set(obs.position.x, obs.position.y, obs.position.z);
+          slot.oMesh.scale.set(obs.size.x, obs.size.y, obs.size.z);
+          slot.wireMesh.scale.set(obs.size.x, obs.size.y, obs.size.z);
+          const obsColor = obs.color || 0xef4444;
+          slot.oMat.color.set(obsColor);
+        } else {
+          slot.slotGroup.visible = false;
+        }
       });
 
-      // Update Specimen Objects
+      // Update Specimen Objects (Zero Allocation)
       const rawObjects =
         current.objects && current.objects.length > 0
           ? current.objects
@@ -422,9 +466,9 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
         if (obj) {
           slot.slotGroup.visible = true;
           slot.slotGroup.position.set(obj.position.x, obj.position.y, obj.position.z);
-          const objColor = new THREE.Color(obj.color || 0xf59e0b);
-          slot.beadMat.color.copy(objColor);
-          slot.beadMat.emissive.copy(objColor);
+          const objColorHex = obj.color || 0xf59e0b;
+          slot.beadMat.color.set(objColorHex);
+          slot.beadMat.emissive.set(objColorHex);
 
           // Pulsing glow if this object is currently highlighted in mission step
           const isObjHighlighted = obj.id === current.highlightObjectId;
@@ -435,7 +479,7 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
           } else {
             slot.beadMat.emissiveIntensity = 0.25;
             slot.ringMesh.scale.setScalar(1);
-            slot.ringMat.color.copy(objColor);
+            slot.ringMat.color.set(objColorHex);
           }
 
           // Show stand only if specimen has not yet been lifted/delivered
@@ -466,7 +510,22 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     return () => {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(frameId);
+
+      // Deep GPU resource disposal
+      scene.traverse((obj) => {
+        if ((obj as THREE.Mesh).isMesh || (obj as THREE.LineSegments).isLineSegments) {
+          const mesh = obj as THREE.Mesh;
+          if (mesh.geometry) mesh.geometry.dispose();
+          if (Array.isArray(mesh.material)) {
+            mesh.material.forEach((m) => m.dispose());
+          } else if (mesh.material) {
+            mesh.material.dispose();
+          }
+        }
+      });
+
       renderer.dispose();
+      renderer.forceContextLoss?.();
       if (container && renderer.domElement) {
         container.removeChild(renderer.domElement);
       }

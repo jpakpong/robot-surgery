@@ -88,6 +88,16 @@ export function useRobotSimulation(initialMission?: Mission) {
   // Sound hum state
   const isHummingRef = useRef<boolean>(false);
 
+  // Dispatch memoization refs to eliminate React re-render thrashing at 60-120fps on mobile
+  const lastDispatchedCart = useRef({ x: 9999, y: 9999, z: 9999 });
+  const lastDispatchedGrip = useRef<number>(-1);
+  const lastDispatchedMoving = useRef<boolean | null>(null);
+  const lastDispatchedDir = useRef<DirectionKey | null>(null);
+  const lastCollidedRef = useRef<boolean>(false);
+  const lastColTypeRef = useRef<'floor' | 'barrier' | null>(null);
+  const lastColWarnRef = useRef<string | null>(null);
+  const lastContactRef = useRef<boolean>(false);
+
   /**
    * Reset or re-initialize to a specific mission
    */
@@ -114,6 +124,15 @@ export function useRobotSimulation(initialMission?: Mission) {
     setCollisionType(null);
     setCollisionWarning(null);
     setIsContactingObject(false);
+
+    lastDispatchedCart.current = { x: 9999, y: 9999, z: 9999 };
+    lastDispatchedGrip.current = -1;
+    lastDispatchedMoving.current = null;
+    lastDispatchedDir.current = null;
+    lastCollidedRef.current = false;
+    lastColTypeRef.current = null;
+    lastColWarnRef.current = null;
+    lastContactRef.current = false;
 
     const calculatedJoints = solveInverseKinematics(tip);
     setRobotState({
@@ -290,20 +309,31 @@ export function useRobotSimulation(initialMission?: Mission) {
 
         targetPosRef.current = col.resolvedPosition;
 
+        let hasColNow = false;
+        let colTypeNow: 'floor' | 'barrier' | null = null;
+        let warnNow: string | null = null;
+
         if (col.hitFloor || col.hitBarrier) {
-          setHasCollided(true);
-          setCollisionType(col.hitFloor ? 'floor' : 'barrier');
-          setCollisionWarning(
-            col.hitFloor
-              ? 'PHYSICAL CONTACT: Cavity Floor / Tray Surface — Penetration Blocked'
-              : `PHYSICAL CONTACT: ${col.contactedObstacleName || 'Anatomical Barrier'} — Penetration Blocked`
-          );
+          hasColNow = true;
+          colTypeNow = col.hitFloor ? 'floor' : 'barrier';
+          warnNow = col.hitFloor
+            ? 'PHYSICAL CONTACT: Cavity Floor / Tray Surface — Penetration Blocked'
+            : `PHYSICAL CONTACT: ${col.contactedObstacleName || 'Anatomical Barrier'} — Penetration Blocked`;
           // Play urgent medical alert buzzer sound
           soundManager.playCollisionAlert();
-        } else {
-          setHasCollided(false);
-          setCollisionType(null);
-          setCollisionWarning(null);
+        }
+
+        if (lastCollidedRef.current !== hasColNow) {
+          lastCollidedRef.current = hasColNow;
+          setHasCollided(hasColNow);
+        }
+        if (lastColTypeRef.current !== colTypeNow) {
+          lastColTypeRef.current = colTypeNow;
+          setCollisionType(colTypeNow);
+        }
+        if (lastColWarnRef.current !== warnNow) {
+          lastColWarnRef.current = warnNow;
+          setCollisionWarning(warnNow);
         }
       } else {
         // Idle contact query: ensure current position is not resting in collision
@@ -312,12 +342,19 @@ export function useRobotSimulation(initialMission?: Mission) {
           targetPosRef.current,
           obstaclesRef.current
         );
-        if (col.hitFloor || col.hitBarrier) {
-          setHasCollided(true);
-          setCollisionType(col.hitFloor ? 'floor' : 'barrier');
-        } else {
-          setHasCollided(false);
-          setCollisionType(null);
+        const hasColNow = col.hitFloor || col.hitBarrier;
+        const colTypeNow = hasColNow ? (col.hitFloor ? 'floor' : 'barrier') : null;
+
+        if (lastCollidedRef.current !== hasColNow) {
+          lastCollidedRef.current = hasColNow;
+          setHasCollided(hasColNow);
+        }
+        if (lastColTypeRef.current !== colTypeNow) {
+          lastColTypeRef.current = colTypeNow;
+          setCollisionType(colTypeNow);
+        }
+        if (lastColWarnRef.current !== null && !hasColNow) {
+          lastColWarnRef.current = null;
           setCollisionWarning(null);
         }
       }
@@ -339,11 +376,17 @@ export function useRobotSimulation(initialMission?: Mission) {
       cartesianPosRef.current = cartCol.resolvedPosition;
 
       if (cartCol.hitFloor || cartCol.hitBarrier) {
-        setHasCollided(true);
-        setCollisionType(cartCol.hitFloor ? 'floor' : 'barrier');
+        if (!lastCollidedRef.current) {
+          lastCollidedRef.current = true;
+          setHasCollided(true);
+        }
+        const cType = cartCol.hitFloor ? 'floor' : 'barrier';
+        if (lastColTypeRef.current !== cType) {
+          lastColTypeRef.current = cType;
+          setCollisionType(cType);
+        }
         soundManager.playCollisionAlert();
       }
-
 
       // 3. Smoothly interpolate gripper jaws
       const gripSpeed = SIMULATION_CONFIG.gripperSpeed * dt;
@@ -379,25 +422,47 @@ export function useRobotSimulation(initialMission?: Mission) {
         }
       }
 
-      setIsContactingObject(!hasAnyGrasped && contacting);
+      const nowContacting = !hasAnyGrasped && contacting;
+      if (lastContactRef.current !== nowContacting) {
+        lastContactRef.current = nowContacting;
+        setIsContactingObject(nowContacting);
+      }
 
       // 5. Solve Inverse Kinematics for 6-DOF joint angles
       const joints = solveInverseKinematics(cartesianPosRef.current);
 
-      // 6. Update state for React consumers
-      setRobotState({
-        cartesianPosition: { ...cartesianPosRef.current },
-        targetPosition: { ...targetPosRef.current },
-        joints,
-        gripperOpenRatio: gripperRatioRef.current,
-        targetGripperRatio: targetGripperRef.current,
-        isMoving: isMovingRef.current,
-        activeDirection: activeDirRef.current,
-      });
+      // 6. Update state for React consumers (only dispatch when delta exceeds threshold or status changed)
+      const dx = Math.abs(cartesianPosRef.current.x - lastDispatchedCart.current.x);
+      const dy = Math.abs(cartesianPosRef.current.y - lastDispatchedCart.current.y);
+      const dz = Math.abs(cartesianPosRef.current.z - lastDispatchedCart.current.z);
+      const dg = Math.abs(gripperRatioRef.current - lastDispatchedGrip.current);
+      const dm = isMovingRef.current !== lastDispatchedMoving.current;
+      const dd = activeDirRef.current !== lastDispatchedDir.current;
 
-      if (objectsRef.current.length > 0) {
-        setObjectsState([...objectsRef.current]);
-        setObjectState(objectsRef.current[0]);
+      const hasMovementDelta = dx > 0.0004 || dy > 0.0004 || dz > 0.0004 || dg > 0.0008 || dm || dd;
+
+      if (hasMovementDelta) {
+        lastDispatchedCart.current.x = cartesianPosRef.current.x;
+        lastDispatchedCart.current.y = cartesianPosRef.current.y;
+        lastDispatchedCart.current.z = cartesianPosRef.current.z;
+        lastDispatchedGrip.current = gripperRatioRef.current;
+        lastDispatchedMoving.current = isMovingRef.current;
+        lastDispatchedDir.current = activeDirRef.current;
+
+        setRobotState({
+          cartesianPosition: { ...cartesianPosRef.current },
+          targetPosition: { ...targetPosRef.current },
+          joints,
+          gripperOpenRatio: gripperRatioRef.current,
+          targetGripperRatio: targetGripperRef.current,
+          isMoving: isMovingRef.current,
+          activeDirection: activeDirRef.current,
+        });
+
+        if (objectsRef.current.length > 0 && (hasAnyGrasped || dx > 0.0004 || dy > 0.0004 || dz > 0.0004)) {
+          setObjectsState([...objectsRef.current]);
+          setObjectState(objectsRef.current[0]);
+        }
       }
 
       animId = requestAnimationFrame(loop);
