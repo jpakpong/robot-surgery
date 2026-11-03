@@ -65,6 +65,44 @@ class SoundEffectsManager {
     }
   }
 
+  private lastCollisionAlertTime: number = 0;
+
+  /**
+   * Urgent medical buzzer sound alert for contacting floor or anatomical barrier
+   */
+  public playCollisionAlert() {
+    if (!this.enabled) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // Debounce to at most once every 240ms so repeated pulses form an authentic medical alarm buzzer
+    if (now - this.lastCollisionAlertTime < 0.22) return;
+    this.lastCollisionAlertTime = now;
+
+    try {
+      // Dual-tone urgent alert: 460 Hz -> 320 Hz square/sawtooth pulse
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(480, now);
+      osc.frequency.setValueAtTime(340, now + 0.07);
+
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.19);
+    } catch {
+      // Audio error suppressed safely
+    }
+  }
+
+
   /**
    * Step target reached chime (subtle pleasant console notification)
    */

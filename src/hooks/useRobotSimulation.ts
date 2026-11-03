@@ -19,6 +19,7 @@ import {
   clampToWorkspace,
   checkObstacleCollision,
   checkObjectPhysicalContact,
+  resolveTipCollisions,
   distance3D,
 } from '../simulation/kinematics';
 import { SIMULATION_CONFIG } from '../simulation/simulationConfig';
@@ -61,8 +62,10 @@ export function useRobotSimulation(initialMission?: Mission) {
   const [targets, setTargets] = useState<TargetZone[]>(initialMission?.targets || []);
   const [obstacles, setObstacles] = useState<ObstacleZone[]>(initialMission?.obstacles || []);
   const [hasCollided, setHasCollided] = useState<boolean>(false);
+  const [collisionType, setCollisionType] = useState<'floor' | 'barrier' | null>(null);
   const [collisionWarning, setCollisionWarning] = useState<string | null>(null);
   const [isContactingObject, setIsContactingObject] = useState<boolean>(false);
+
 
   // Mutable refs for high-frequency physics/render loop without re-triggering effects
   const cartesianPosRef = useRef<Vector3D>(
@@ -108,6 +111,7 @@ export function useRobotSimulation(initialMission?: Mission) {
     setTargets([...mission.targets]);
     setObstacles(mission.obstacles ? [...mission.obstacles] : []);
     setHasCollided(false);
+    setCollisionType(null);
     setCollisionWarning(null);
     setIsContactingObject(false);
 
@@ -229,6 +233,7 @@ export function useRobotSimulation(initialMission?: Mission) {
 
     targetPosRef.current = { x: 0, y: 0.5, z: 0 };
     setCollisionWarning(null);
+    setCollisionType(null);
     setHasCollided(false);
   }, []);
 
@@ -251,51 +256,94 @@ export function useRobotSimulation(initialMission?: Mission) {
             : SIMULATION_CONFIG.speed.normal;
         const deltaMove = speed * dt;
 
-        const nextTarget = { ...targetPosRef.current };
+        const candidateTarget = { ...targetPosRef.current };
 
         switch (activeDirRef.current) {
           case 'left':
-            nextTarget.x -= deltaMove;
+            candidateTarget.x -= deltaMove;
             break;
           case 'right':
-            nextTarget.x += deltaMove;
+            candidateTarget.x += deltaMove;
             break;
           case 'up':
-            nextTarget.y += deltaMove;
+            candidateTarget.y += deltaMove;
             break;
           case 'down':
-            nextTarget.y -= deltaMove;
+            candidateTarget.y -= deltaMove;
             break;
           case 'forward':
             // Forward drives deeper into the surgical field (-Z)
-            nextTarget.z -= deltaMove;
+            candidateTarget.z -= deltaMove;
             break;
           case 'backward':
             // Backward retracts toward the entry port (+Z)
-            nextTarget.z += deltaMove;
+            candidateTarget.z += deltaMove;
             break;
         }
 
-        // Clamp to physical surgical workspace bounds
-        const clamped = clampToWorkspace(nextTarget);
+        // Rigid collision resolution: strictly blocks passing through floor or obstacles
+        const col = resolveTipCollisions(
+          targetPosRef.current,
+          candidateTarget,
+          obstaclesRef.current
+        );
 
-        // Check obstacle collision
-        const collided = checkObstacleCollision(clamped, obstaclesRef.current);
-        if (collided) {
+        targetPosRef.current = col.resolvedPosition;
+
+        if (col.hitFloor || col.hitBarrier) {
           setHasCollided(true);
-          setCollisionWarning('Warning: Proximity to sensitive tissue barrier!');
+          setCollisionType(col.hitFloor ? 'floor' : 'barrier');
+          setCollisionWarning(
+            col.hitFloor
+              ? 'PHYSICAL CONTACT: Cavity Floor / Tray Surface — Penetration Blocked'
+              : `PHYSICAL CONTACT: ${col.contactedObstacleName || 'Anatomical Barrier'} — Penetration Blocked`
+          );
+          // Play urgent medical alert buzzer sound
+          soundManager.playCollisionAlert();
         } else {
           setHasCollided(false);
+          setCollisionType(null);
           setCollisionWarning(null);
-          targetPosRef.current = clamped;
+        }
+      } else {
+        // Idle contact query: ensure current position is not resting in collision
+        const col = resolveTipCollisions(
+          targetPosRef.current,
+          targetPosRef.current,
+          obstaclesRef.current
+        );
+        if (col.hitFloor || col.hitBarrier) {
+          setHasCollided(true);
+          setCollisionType(col.hitFloor ? 'floor' : 'barrier');
+        } else {
+          setHasCollided(false);
+          setCollisionType(null);
+          setCollisionWarning(null);
         }
       }
 
       // 2. Smoothly damp Cartesian tip position toward target position
       const factor = 1 - Math.exp(-SIMULATION_CONFIG.smoothFactor * dt);
-      cartesianPosRef.current.x += (targetPosRef.current.x - cartesianPosRef.current.x) * factor;
-      cartesianPosRef.current.y += (targetPosRef.current.y - cartesianPosRef.current.y) * factor;
-      cartesianPosRef.current.z += (targetPosRef.current.z - cartesianPosRef.current.z) * factor;
+      const candidateCart = {
+        x: cartesianPosRef.current.x + (targetPosRef.current.x - cartesianPosRef.current.x) * factor,
+        y: cartesianPosRef.current.y + (targetPosRef.current.y - cartesianPosRef.current.y) * factor,
+        z: cartesianPosRef.current.z + (targetPosRef.current.z - cartesianPosRef.current.z) * factor,
+      };
+
+      // Rigid boundary enforcement on actual Cartesian position: tip can never penetrate floor or barrier
+      const cartCol = resolveTipCollisions(
+        cartesianPosRef.current,
+        candidateCart,
+        obstaclesRef.current
+      );
+      cartesianPosRef.current = cartCol.resolvedPosition;
+
+      if (cartCol.hitFloor || cartCol.hitBarrier) {
+        setHasCollided(true);
+        setCollisionType(cartCol.hitFloor ? 'floor' : 'barrier');
+        soundManager.playCollisionAlert();
+      }
+
 
       // 3. Smoothly interpolate gripper jaws
       const gripSpeed = SIMULATION_CONFIG.gripperSpeed * dt;
@@ -370,6 +418,7 @@ export function useRobotSimulation(initialMission?: Mission) {
     targets,
     obstacles,
     hasCollided,
+    collisionType,
     collisionWarning,
     isContactingObject,
     speedMode,
@@ -382,3 +431,4 @@ export function useRobotSimulation(initialMission?: Mission) {
     loadMissionState,
   };
 }
+

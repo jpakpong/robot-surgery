@@ -10,11 +10,12 @@ export const SIMULATION_CONFIG = {
   workspace: {
     xMin: -3.2,
     xMax: 3.2,
-    yMin: -1.2,
+    yMin: -1.12, // Physical floor boundary (cavity floor surface at -1.12 to -1.20)
     yMax: 2.4,
     zMin: -2.8,
     zMax: 2.8,
   },
+
 
   // Remote Center of Motion (RCM) / Trocar Cannula Port location
   // In robotic surgery, the instrument shaft pivots around this stationary incision point

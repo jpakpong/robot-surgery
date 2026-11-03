@@ -163,30 +163,205 @@ export function solveForwardKinematics(
   };
 }
 
+export const FLOOR_SURFACE_Y = -1.12; // Surgical cavity floor level (tip cannot penetrate below this)
+export const TIP_COLLISION_MARGIN = 0.08; // Physical contact margin around instrument jaws/tip
+
+export interface CollisionResolution {
+  resolvedPosition: Vector3D;
+  hitFloor: boolean;
+  hitBarrier: boolean;
+  contactedObstacleName?: string;
+}
+
 /**
- * Check if tip is inside an obstacle bounding box
+ * Checks if a 3D position penetrates an obstacle bounding box (with optional margin)
+ */
+export function isPointInsideObstacle(
+  pos: Vector3D,
+  obs: ObstacleZone,
+  margin: number = TIP_COLLISION_MARGIN
+): boolean {
+  const halfX = obs.size.x / 2 + margin;
+  const halfY = obs.size.y / 2 + margin;
+  const halfZ = obs.size.z / 2 + margin;
+
+  return (
+    pos.x >= obs.position.x - halfX &&
+    pos.x <= obs.position.x + halfX &&
+    pos.y >= obs.position.y - halfY &&
+    pos.y <= obs.position.y + halfY &&
+    pos.z >= obs.position.z - halfZ &&
+    pos.z <= obs.position.z + halfZ
+  );
+}
+
+/**
+ * Check if tip is inside any obstacle bounding box
  */
 export function checkObstacleCollision(
   tip: Vector3D,
   obstacles: ObstacleZone[]
 ): boolean {
   for (const obs of obstacles) {
-    const halfX = obs.size.x / 2;
-    const halfY = obs.size.y / 2;
-    const halfZ = obs.size.z / 2;
-
-    if (
-      tip.x >= obs.position.x - halfX &&
-      tip.x <= obs.position.x + halfX &&
-      tip.y >= obs.position.y - halfY &&
-      tip.y <= obs.position.y + halfY &&
-      tip.z >= obs.position.z - halfZ &&
-      tip.z <= obs.position.z + halfZ
-    ) {
+    if (isPointInsideObstacle(tip, obs, TIP_COLLISION_MARGIN)) {
       return true;
     }
   }
   return false;
+}
+
+/**
+ * Rigid collision resolution:
+ * 1. Strictly prevents the tip from passing through the floor (Y cannot go below FLOOR_SURFACE_Y).
+ * 2. Strictly prevents the tip from passing through any barrier/obstacle box (rigid AABB collision blocking).
+ * 3. Permits sliding along non-blocked axes so the tool does not completely seize.
+ * Returns the resolved non-penetrating position and collision status flags.
+ */
+export function resolveTipCollisions(
+  prevPos: Vector3D,
+  candidatePos: Vector3D,
+  obstacles: ObstacleZone[] = []
+): CollisionResolution {
+  let hitFloor = false;
+  let hitBarrier = false;
+  let contactedObstacleName: string | undefined;
+
+  const ws = SIMULATION_CONFIG.workspace;
+
+  // 1. Initial clamp to workspace and floor plane
+  const desired: Vector3D = {
+    x: clamp(candidatePos.x, ws.xMin, ws.xMax),
+    y: clamp(candidatePos.y, FLOOR_SURFACE_Y, ws.yMax),
+    z: clamp(candidatePos.z, ws.zMin, ws.zMax),
+  };
+
+  // Flag floor collision if candidate penetrates or rests on the floor
+  if (candidatePos.y <= FLOOR_SURFACE_Y || Math.abs(desired.y - FLOOR_SURFACE_Y) < 0.005) {
+    hitFloor = true;
+    desired.y = FLOOR_SURFACE_Y;
+  }
+
+  // If no obstacle barriers exist, enforce floor barrier only
+  if (!obstacles || obstacles.length === 0) {
+    return {
+      resolvedPosition: desired,
+      hitFloor,
+      hitBarrier: false,
+    };
+  }
+
+  // 2. Axis-by-axis barrier resolution to allow smooth surface sliding while preventing pass-through
+  const resolved: Vector3D = { ...prevPos };
+  if (resolved.y < FLOOR_SURFACE_Y) {
+    resolved.y = FLOOR_SURFACE_Y;
+  }
+
+  // --- Test X-axis movement ---
+  const testX: Vector3D = { x: desired.x, y: resolved.y, z: resolved.z };
+  let xCollided = false;
+  for (const obs of obstacles) {
+    if (isPointInsideObstacle(testX, obs)) {
+      xCollided = true;
+      hitBarrier = true;
+      contactedObstacleName = obs.name;
+      const halfX = obs.size.x / 2 + TIP_COLLISION_MARGIN;
+      if (desired.x > prevPos.x) {
+        resolved.x = Math.min(resolved.x, obs.position.x - halfX);
+      } else if (desired.x < prevPos.x) {
+        resolved.x = Math.max(resolved.x, obs.position.x + halfX);
+      }
+      break;
+    }
+  }
+  if (!xCollided) {
+    resolved.x = desired.x;
+  }
+
+  // --- Test Y-axis movement (including floor check) ---
+  const testY: Vector3D = { x: resolved.x, y: desired.y, z: resolved.z };
+  let yCollided = false;
+  if (desired.y <= FLOOR_SURFACE_Y) {
+    hitFloor = true;
+    resolved.y = FLOOR_SURFACE_Y;
+  } else {
+    for (const obs of obstacles) {
+      if (isPointInsideObstacle(testY, obs)) {
+        yCollided = true;
+        hitBarrier = true;
+        contactedObstacleName = obs.name;
+        const halfY = obs.size.y / 2 + TIP_COLLISION_MARGIN;
+        if (desired.y > prevPos.y) {
+          resolved.y = Math.min(resolved.y, obs.position.y - halfY);
+        } else if (desired.y < prevPos.y) {
+          resolved.y = Math.max(resolved.y, obs.position.y + halfY);
+        }
+        break;
+      }
+    }
+    if (!yCollided) {
+      resolved.y = desired.y;
+    }
+  }
+
+  // --- Test Z-axis movement ---
+  const testZ: Vector3D = { x: resolved.x, y: resolved.y, z: desired.z };
+  let zCollided = false;
+  for (const obs of obstacles) {
+    if (isPointInsideObstacle(testZ, obs)) {
+      zCollided = true;
+      hitBarrier = true;
+      contactedObstacleName = obs.name;
+      const halfZ = obs.size.z / 2 + TIP_COLLISION_MARGIN;
+      if (desired.z > prevPos.z) {
+        resolved.z = Math.min(resolved.z, obs.position.z - halfZ);
+      } else if (desired.z < prevPos.z) {
+        resolved.z = Math.max(resolved.z, obs.position.z + halfZ);
+      }
+      break;
+    }
+  }
+  if (!zCollided) {
+    resolved.z = desired.z;
+  }
+
+  // 3. Absolute penetration safeguard: project out if still inside any obstacle bounding box
+  for (const obs of obstacles) {
+    if (isPointInsideObstacle(resolved, obs)) {
+      hitBarrier = true;
+      contactedObstacleName = obs.name;
+      const halfX = obs.size.x / 2 + TIP_COLLISION_MARGIN;
+      const halfY = obs.size.y / 2 + TIP_COLLISION_MARGIN;
+      const halfZ = obs.size.z / 2 + TIP_COLLISION_MARGIN;
+
+      const dLeft = Math.abs(resolved.x - (obs.position.x - halfX));
+      const dRight = Math.abs(resolved.x - (obs.position.x + halfX));
+      const dBottom = Math.abs(resolved.y - (obs.position.y - halfY));
+      const dTop = Math.abs(resolved.y - (obs.position.y + halfY));
+      const dFront = Math.abs(resolved.z - (obs.position.z - halfZ));
+      const dBack = Math.abs(resolved.z - (obs.position.z + halfZ));
+
+      const minPen = Math.min(dLeft, dRight, dBottom, dTop, dFront, dBack);
+      if (minPen === dLeft) resolved.x = obs.position.x - halfX;
+      else if (minPen === dRight) resolved.x = obs.position.x + halfX;
+      else if (minPen === dBottom) resolved.y = obs.position.y - halfY;
+      else if (minPen === dTop) resolved.y = obs.position.y + halfY;
+      else if (minPen === dFront) resolved.z = obs.position.z - halfZ;
+      else resolved.z = obs.position.z + halfZ;
+    }
+  }
+
+  // 4. Hard floor enforcement: ensure Y is strictly never below floor level
+  if (resolved.y <= FLOOR_SURFACE_Y) {
+    resolved.y = FLOOR_SURFACE_Y;
+    hitFloor = true;
+  }
+
+  return {
+    resolvedPosition: resolved,
+    hitFloor,
+    hitBarrier,
+    contactedObstacleName,
+  };
 }
 
 /**
@@ -199,7 +374,8 @@ export function checkObjectPhysicalContact(
 ): boolean {
   if (!object) return false;
   const dist = distance3D(tip, object.position);
-  // Physical boundary contact threshold (bead radius ~0.28 + tip contact zone ~0.14)
+  // Physical boundary contact threshold (bead radius ~0.16 + tip contact zone ~0.12)
   const contactRadius = object.radius + 0.12;
   return dist <= contactRadius;
 }
+

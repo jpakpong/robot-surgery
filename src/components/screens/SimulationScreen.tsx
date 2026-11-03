@@ -16,7 +16,9 @@ import {
   CheckCircle2,
   Sparkles,
   User,
+  AlertTriangle,
 } from 'lucide-react';
+
 import { Mission, UserProgressData } from '../../types/simulation';
 import { getMissionsForTask } from '../../missions/missionEngine';
 import { useRobotSimulation } from '../../hooks/useRobotSimulation';
@@ -77,6 +79,7 @@ export const SimulationScreen: React.FC<SimulationScreenProps> = ({
     targets,
     obstacles,
     hasCollided,
+    collisionType,
     collisionWarning,
     isContactingObject,
     speedMode,
@@ -88,6 +91,7 @@ export const SimulationScreen: React.FC<SimulationScreenProps> = ({
     recalibratePosition,
     loadMissionState,
   } = useRobotSimulation(currentMission);
+
 
   const currentMissionIndexRef = useRef<number>(0);
   currentMissionIndexRef.current = currentMissionIndex;
@@ -317,7 +321,7 @@ export const SimulationScreen: React.FC<SimulationScreenProps> = ({
       </div>
 
       {/* 3. Dual 3D Viewports (Doctor View on Left, Robot View on Right) */}
-      <main className="flex-1 min-h-0 w-full grid grid-cols-1 lg:grid-cols-2 gap-2 mb-1.5 relative">
+      <main className="flex-1 min-h-0 w-full grid grid-cols-1 lg:grid-cols-2 gap-2 mb-1.5 relative rounded-2xl overflow-hidden">
         
         {/* Doctor View */}
         <div className="w-full h-full relative min-h-0">
@@ -331,6 +335,7 @@ export const SimulationScreen: React.FC<SimulationScreenProps> = ({
             highlightTargetId={currentStep?.highlightTargetId}
             highlightObjectId={currentStep?.highlightObjectId}
             isColliding={hasCollided}
+            collisionType={collisionType}
             isContactingObject={isContactingObject}
           />
         </div>
@@ -348,9 +353,24 @@ export const SimulationScreen: React.FC<SimulationScreenProps> = ({
             highlightTargetId={currentStep?.highlightTargetId}
             highlightObjectId={currentStep?.highlightObjectId}
             isColliding={hasCollided}
+            collisionType={collisionType}
             isContactingObject={isContactingObject}
           />
         </div>
+
+        {/* Red Flash Collision Alert Screen Overlay */}
+        {hasCollided && (
+          <div className="absolute inset-0 pointer-events-none z-30 rounded-2xl border-[6px] border-rose-500/95 shadow-[inset_0_0_100px_rgba(244,63,94,0.75)] animate-redFlash flex items-start justify-center pt-3">
+            <div className="bg-rose-600/95 text-white px-4 py-2 rounded-xl border-2 border-rose-300 shadow-2xl flex items-center gap-2 text-xs sm:text-sm font-bold tracking-wide animate-bounce">
+              <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0" />
+              <span>
+                {collisionType === 'floor'
+                  ? 'COLLISION ALERT: CONTACT WITH TRAY FLOOR — PASS-THROUGH BLOCKED'
+                  : 'COLLISION ALERT: CONTACT WITH BARRIER — PASS-THROUGH BLOCKED'}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Automatic Mission Advance Celebration Banner Overlay */}
         {autoAdvanceBanner.visible && (
@@ -368,6 +388,7 @@ export const SimulationScreen: React.FC<SimulationScreenProps> = ({
           </div>
         )}
       </main>
+
 
       {/* 4. Streamlined Master Console Pendant (Height-fitted for 11" iPad) */}
       <ControlPanel

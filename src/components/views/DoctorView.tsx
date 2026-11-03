@@ -23,6 +23,7 @@ interface DoctorViewProps {
   highlightTargetId?: string;
   highlightObjectId?: string;
   isColliding?: boolean;
+  collisionType?: 'floor' | 'barrier' | null;
   isContactingObject?: boolean;
 }
 
@@ -36,6 +37,7 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
   highlightTargetId,
   highlightObjectId,
   isColliding,
+  collisionType,
   isContactingObject,
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -51,6 +53,7 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     highlightTargetId,
     highlightObjectId,
     isColliding,
+    collisionType,
     isContactingObject,
   });
 
@@ -64,8 +67,10 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     highlightTargetId,
     highlightObjectId,
     isColliding,
+    collisionType,
     isContactingObject,
   };
+
 
   useEffect(() => {
     const container = mountRef.current;
@@ -331,12 +336,16 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
 
       // Flash tip beacon if colliding with obstacle or contacting object
       if (current.isColliding) {
-        tipBeaconMat.color.setHex(0xef4444);
+        tipBeaconMat.color.setHex(0xff1111);
+        tipBeacon.scale.setScalar(1.5 + Math.sin(elapsed * 12) * 0.4);
       } else if (current.isContactingObject) {
         tipBeaconMat.color.setHex(0xf59e0b); // Amber contact warning
+        tipBeacon.scale.setScalar(1.2);
       } else {
         tipBeaconMat.color.setHex(0x38bdf8);
+        tipBeacon.scale.setScalar(1.0);
       }
+
 
       // Update Target Meshes
       targetsGroup.clear();
@@ -498,20 +507,31 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
         </div>
       </div>
 
+      {/* Red Flash Collision Border & Vignette */}
+      {isColliding && (
+        <div className="absolute inset-0 pointer-events-none z-30 rounded-2xl border-[5px] border-rose-500/95 shadow-[inset_0_0_80px_rgba(244,63,94,0.7)] animate-redFlash" />
+      )}
+
       {/* Collision Alert Banner */}
       {isColliding && (
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 pointer-events-none bg-rose-600/90 text-white px-3 py-1 rounded-md text-xs font-semibold tracking-wide border border-rose-400 animate-bounce">
-          COLLISION WARNING: SENSITIVE TISSUE
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-40 pointer-events-none bg-rose-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wide border-2 border-rose-300 shadow-xl animate-bounce flex items-center gap-1.5 whitespace-nowrap">
+          <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
+          <span>
+            {collisionType === 'floor'
+              ? 'COLLISION ALERT: CONTACT WITH TRAY FLOOR — PASS-THROUGH BLOCKED'
+              : 'COLLISION ALERT: CONTACT WITH BARRIER — PASS-THROUGH BLOCKED'}
+          </span>
         </div>
       )}
 
       {/* Real Physical Contact Warning Banner */}
       {isContactingObject && !isColliding && (
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 pointer-events-none bg-amber-500/95 text-slate-950 px-3.5 py-1.5 rounded-md text-xs font-bold tracking-wide border border-amber-300 shadow-lg animate-pulse flex items-center gap-1.5">
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 pointer-events-none bg-amber-500/95 text-slate-950 px-3.5 py-1.5 rounded-md text-xs font-bold tracking-wide border border-amber-300 shadow-lg animate-pulse flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-slate-950 animate-ping"></span>
           <span>PHYSICAL CONTACT: TIP TOUCHING SPECIMEN</span>
         </div>
       )}
     </div>
   );
+
 };

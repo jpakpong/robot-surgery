@@ -30,6 +30,7 @@ interface RobotViewProps {
   highlightTargetId?: string;
   highlightObjectId?: string;
   isColliding?: boolean;
+  collisionType?: 'floor' | 'barrier' | null;
   isContactingObject?: boolean;
 }
 
@@ -44,6 +45,7 @@ export const RobotView: React.FC<RobotViewProps> = ({
   highlightTargetId,
   highlightObjectId,
   isColliding,
+  collisionType,
   isContactingObject,
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -61,6 +63,7 @@ export const RobotView: React.FC<RobotViewProps> = ({
     highlightTargetId,
     highlightObjectId,
     isColliding,
+    collisionType,
     isContactingObject,
   });
 
@@ -75,8 +78,10 @@ export const RobotView: React.FC<RobotViewProps> = ({
     highlightTargetId,
     highlightObjectId,
     isColliding,
+    collisionType,
     isContactingObject,
   };
+
 
   const [activePreset, setActivePreset] = useState<'iso' | 'side' | 'top'>('iso');
 
@@ -491,14 +496,18 @@ export const RobotView: React.FC<RobotViewProps> = ({
       wristBall.position.set(fk.tipPos.x, fk.tipPos.y, fk.tipPos.z);
       tipBeacon.position.set(fk.tipPos.x, fk.tipPos.y, fk.tipPos.z);
 
-      // Beacon color
+      // Beacon color and red collision pulsing
       if (current.isColliding) {
-        tipBeaconMat.color.setHex(0xef4444);
+        tipBeaconMat.color.setHex(0xff1111);
+        tipBeacon.scale.setScalar(1.5 + Math.sin(elapsed * 12) * 0.4);
       } else if (current.isContactingObject) {
         tipBeaconMat.color.setHex(0xf59e0b);
+        tipBeacon.scale.setScalar(1.2);
       } else {
         tipBeaconMat.color.setHex(0x38bdf8);
+        tipBeacon.scale.setScalar(1.0);
       }
+
 
       // Synchronized gripper jaws
       _vDiff.set(fk.tipPos.x - fk.trocarPos.x, fk.tipPos.y - fk.trocarPos.y, fk.tipPos.z - fk.trocarPos.z);
@@ -695,12 +704,30 @@ export const RobotView: React.FC<RobotViewProps> = ({
         </button>
       </div>
 
+      {/* Red Flash Collision Border & Vignette */}
+      {isColliding && (
+        <div className="absolute inset-0 pointer-events-none z-30 rounded-2xl border-[5px] border-rose-500/95 shadow-[inset_0_0_80px_rgba(244,63,94,0.7)] animate-redFlash" />
+      )}
+
+      {/* Collision Alert Banner */}
+      {isColliding && (
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-40 pointer-events-none bg-rose-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wide border-2 border-rose-300 shadow-xl animate-bounce flex items-center gap-1.5 whitespace-nowrap">
+          <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
+          <span>
+            {collisionType === 'floor'
+              ? 'COLLISION ALERT: CONTACT WITH TRAY FLOOR — PASS-THROUGH BLOCKED'
+              : 'COLLISION ALERT: CONTACT WITH BARRIER — PASS-THROUGH BLOCKED'}
+          </span>
+        </div>
+      )}
+
       {/* Real Physical Contact Warning Banner */}
       {isContactingObject && !isColliding && (
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 pointer-events-none bg-amber-500/95 text-slate-950 px-3 py-1 rounded-md text-xs font-bold tracking-wide border border-amber-300 shadow-lg animate-pulse flex items-center gap-1.5">
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 pointer-events-none bg-amber-500/95 text-slate-950 px-3 py-1 rounded-md text-xs font-bold tracking-wide border border-amber-300 shadow-lg animate-pulse flex items-center gap-1.5">
           <span>PHYSICAL CONTACT DETECTED</span>
         </div>
       )}
+
 
       {/* Orbit Tip Guidance */}
       <div className="absolute bottom-3 right-3 pointer-events-none bg-slate-950/70 backdrop-blur-sm border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-400 flex items-center gap-1.5">
