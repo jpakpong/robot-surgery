@@ -1,0 +1,1307 @@
+Project Specification and Development Prompt
+Web-Based Surgical Robotics Simulation for Medical Education
+1. Project Overview
+Develop an interactive, web-based educational simulation inspired by the da Vinci 5 robotic surgical system.
+
+The application is designed for first-year medical students who have no prior knowledge of robotics, programming, or robotic surgery.
+
+The primary objective is to introduce students to basic concepts of robotic surgical instrument control and object manipulation through an intuitive, interactive 3D simulation.
+
+This is an educational demonstration, not a clinically accurate surgical simulator. Do not claim to reproduce the actual mechanical design, proprietary software, kinematics, or clinical performance of the da Vinci 5 system.
+
+The application must be simple, visually engaging, easy to understand, and optimized for iPad and tablet use.
+
+Main concept
+The application provides two synchronized visual perspectives:
+
+Doctor View: A simulated endoscopic perspective showing the virtual surgical workspace and instrument tip.
+
+Robot View: A 3D visualization of a simplified robotic arm showing its movement and instrument configuration.
+
+Students control the virtual robotic instrument using large touchscreen buttons and complete guided missions.
+
+2. Technology Stack
+Use the following technologies:
+
+Next.js with App Router
+
+React
+
+TypeScript
+
+Node.js development environment
+
+Three.js for 3D graphics
+
+React Three Fiber for integrating Three.js with React
+
+Drei for 3D helpers and controls
+
+CSS or Tailwind CSS for responsive UI
+
+Vercel for web hosting
+
+Browser localStorage for saving student progress
+
+Architecture: Level 1 — Independent Simulation
+The application must use a client-side simulation architecture.
+
+Requirements:
+
+No user registration or login.
+
+No backend server for simulation.
+
+No database.
+
+No classroom management system.
+
+No real-time communication between students.
+
+Each student's simulation runs independently in their own browser.
+
+Each student's robot state is isolated from other users.
+
+Save individual progress using localStorage.
+
+The application must remain functional without a database.
+
+The server should primarily deliver the application and static assets. Robot calculations, mission progression, and 3D visualization should run in the student's browser.
+
+Design the software architecture so that a backend and teacher dashboard could be added in the future without rebuilding the simulation engine.
+
+3. Target Users and Interface Requirements
+Target users are first-year medical students.
+
+Assume students have no robotics experience.
+
+The application should be understandable within approximately one minute of opening the website.
+
+Device support
+Prioritize:
+
+iPad in landscape orientation.
+
+Other tablets.
+
+Desktop and laptop.
+
+Mobile phones as a secondary supported layout.
+
+Responsive layout
+Desktop and iPad landscape:
+
+Doctor View on the left.
+
+Robot View on the right.
+
+Instruction panel clearly visible.
+
+Touchscreen control panel below or alongside the views.
+
+Mission progress displayed prominently.
+
+Tablet portrait:
+
+Stack Doctor View and Robot View vertically.
+
+Place instructions and controls below the views.
+
+Ensure all controls remain accessible without excessive scrolling.
+
+Interaction
+Support touchscreen and mouse.
+
+Use large buttons with clear directional icons.
+
+Do not require a keyboard.
+
+Do not require a physical joystick.
+
+Provide immediate visual feedback.
+
+Use press-and-hold movement.
+
+Movement must stop immediately when the user releases a button.
+
+Avoid small controls or complicated menus.
+
+4. Application Navigation and Workflow
+The application must have the following workflow:
+
+Welcome Screen.
+
+Task Selection Screen.
+
+Task Introduction Screen.
+
+Simulation Screen.
+
+Mission Completion.
+
+Task Completion Summary.
+
+Option to repeat or switch tasks.
+
+Students must be able to return to the task selection screen at any time.
+
+Both tasks must always be available.
+
+Students must be able to:
+
+Start either task.
+
+Switch between tasks.
+
+Restart the current mission.
+
+Repeat a completed mission.
+
+Redo an entire task.
+
+Pause and resume the simulation.
+
+Review instructions again.
+
+Do not lock completed tasks.
+
+5. Welcome Screen
+Create a clean and professional landing page.
+
+Suggested title:
+
+Surgical Robotics Simulation
+
+Subtitle:
+
+An Interactive Introduction to Robotic Instrument Control
+
+Display a simplified illustration or 3D representation of a robotic surgical arm.
+
+Include:
+
+Start Simulation button.
+
+Short introduction.
+
+Simple explanation of Doctor View and Robot View.
+
+Instructions for touchscreen operation.
+
+The interface should look like a modern medical education application rather than an engineering control dashboard.
+
+6. Task Selection Screen
+Provide two independent learning tasks.
+
+Task 1: Basic Instrument Control
+Description:
+
+Learn how to control a robotic surgical instrument through directional movement and positioning.
+
+Difficulty: Beginner.
+
+Missions: 5.
+
+Maximum score: 50 points.
+
+Task 2: Object Manipulation
+Description:
+
+Learn how to approach, grasp, lift, transfer, and release an object using a virtual robotic gripper.
+
+Difficulty: Beginner.
+
+Missions: 5.
+
+Maximum score: 50 points.
+
+Each task card should display:
+
+Task number.
+
+Task title.
+
+Short description.
+
+Number of missions.
+
+Difficulty level.
+
+Completion status.
+
+Best score, if available.
+
+Start or Redo button.
+
+7. Main Simulation Interface
+The simulation screen is the most important part of the application.
+
+It must contain five main components:
+
+Doctor View.
+
+Robot View.
+
+Instruction Panel.
+
+Control Panel.
+
+Mission Progress Indicator.
+
+7.1 Doctor View
+Create a simulated endoscopic perspective inside a simplified virtual surgical workspace.
+
+The view should include:
+
+Virtual surgical environment.
+
+Robotic instrument tip.
+
+Target objects or target zones.
+
+Movement direction indicators.
+
+Highlighted mission targets.
+
+Visual feedback when the instrument reaches a target.
+
+Obstacles for selected missions.
+
+The Doctor View should be the primary visual area because it represents what a surgeon would observe through an endoscopic camera.
+
+Use a clean, educational visual style rather than realistic anatomical imagery.
+
+The instrument must move in response to the same robot state used by the Robot View.
+
+7.2 Robot View
+Display a complete simplified 3D robotic arm.
+
+The model should contain:
+
+Base.
+
+Shoulder joint.
+
+Upper arm.
+
+Elbow joint.
+
+Forearm.
+
+Wrist joints.
+
+End effector.
+
+Gripper.
+
+Use a simplified six-revolute-joint robotic arm model.
+
+The robot should be constructed from geometric components such as:
+
+Cylinders.
+
+Spheres.
+
+Boxes.
+
+Capsules.
+
+Simplified mechanical links.
+
+Do not depend on proprietary da Vinci 5 CAD models.
+
+Requirements:
+
+Smooth joint movement.
+
+Real-time visualization.
+
+Rotatable camera.
+
+Zoom capability.
+
+Suitable lighting.
+
+Clear distinction between joints and links.
+
+Smooth and stable animation.
+
+The robot should visually respond to all instrument movements and gripper operations.
+
+7.3 Synchronization
+Doctor View and Robot View must always represent exactly the same simulation state.
+
+For example:
+
+When the instrument moves right, both views must show rightward movement.
+
+When the instrument moves upward, both views must show upward movement.
+
+When the instrument moves forward, both views must show increased depth.
+
+When the gripper closes, both views must show the same gripper state.
+
+When an object is grasped, both views must represent the attachment.
+
+Implement one shared robot state as the source of truth.
+
+Do not implement independent movement systems for the two views.
+
+8. Robot Simulation and Kinematics
+Implement a simplified educational robot model.
+
+Required functions
+Robot joint state management.
+
+Forward kinematics.
+
+Cartesian instrument movement.
+
+Simplified inverse kinematics or a stable Cartesian-to-joint mapping.
+
+Joint limits.
+
+Workspace limits.
+
+Basic collision detection.
+
+Smooth movement interpolation.
+
+Gripper open/close state.
+
+The system must maintain a consistent relationship between the robot's joint positions and the instrument tip position.
+
+The simulation should be stable and predictable.
+
+Do not implement unnecessary advanced robotics mathematics that makes the application difficult to maintain.
+
+The primary goal is educational interaction, not physical or clinical accuracy.
+
+Movement parameters
+Define configurable parameters for:
+
+Movement speed.
+
+Maximum workspace.
+
+Joint limits.
+
+Instrument orientation.
+
+Gripper opening and closing.
+
+Movement sensitivity.
+
+The values should be adjustable in the simulation configuration rather than hard-coded throughout the application.
+
+9. Control Panel
+Create large, intuitive touchscreen controls.
+
+Directional controls
+Include:
+
+LEFT
+
+RIGHT
+
+UP
+
+DOWN
+
+FORWARD
+
+BACKWARD
+
+Gripper controls
+Include:
+
+OPEN GRIPPER
+
+CLOSE GRIPPER
+
+Control behavior
+For directional controls:
+
+Press and hold to move continuously.
+
+Release to stop immediately.
+
+Provide visual feedback while pressed.
+
+Highlight the required control during guided instructions.
+
+For gripper controls:
+
+Use click or tap actions.
+
+Display the current gripper state.
+
+Prevent grasping unless the instrument is correctly positioned near the object.
+
+Include additional controls:
+
+Pause.
+
+Resume.
+
+Reset Current Mission.
+
+Show Instruction Again.
+
+Return to Task Selection.
+
+Use clear icons and short labels.
+
+10. Guided Instruction System
+This is one of the most important features.
+
+Every mission must contain several sequential guided steps.
+
+Students should never have to guess what to do next.
+
+Each guided step should contain:
+
+Instruction text.
+
+Relevant control highlighted.
+
+Target or object highlighted.
+
+Success condition.
+
+Confirmation message.
+
+Automatic progression to the next step.
+
+Example
+Instruction:
+
+"Move the instrument tip to the RIGHT target."
+
+Expected visual feedback:
+
+RIGHT button pulses gently.
+
+Right target in Doctor View is highlighted.
+
+Instrument movement is visible in both views.
+
+When the instrument reaches the target, movement is no longer required.
+
+Success message:
+
+"Target reached!"
+
+After success:
+
+Stop the button animation.
+
+Highlight the success state.
+
+Display a green confirmation message.
+
+Optionally play a subtle confirmation sound.
+
+Wait briefly.
+
+Automatically advance to the next instruction.
+
+Visual guidance rules
+Use three types of visual cues:
+
+Control cue
+
+Gentle blinking or pulsing of the required button.
+
+Approximately 0.8–1.0 second animation interval.
+
+Target cue
+
+Highlight the target area.
+
+Use a gentle glow or outline.
+
+Success cue
+
+Green confirmation.
+
+Short success message.
+
+Optional subtle sound.
+
+Never blink all controls simultaneously.
+
+Only highlight the control required by the current instruction.
+
+Provide:
+
+Show Instruction Again.
+
+Pause.
+
+Reset Current Mission.
+
+Respect reduced-motion settings.
+
+11. Task 1: Basic Instrument Control
+Objective:
+
+Introduce students to directional movement and instrument positioning.
+
+This task contains five missions.
+
+Mission 1: Move Right
+Objective:
+Move the instrument tip to the right target.
+
+Guided steps:
+
+Identify the right target.
+
+Press and hold RIGHT.
+
+Move until the instrument enters the target zone.
+
+Automatically detect success.
+
+Success message:
+
+"Great! You have reached the right target."
+
+Mission 2: Move Left
+Objective:
+Move the instrument tip to the left target.
+
+Guided steps:
+
+Identify the left target.
+
+Press and hold LEFT.
+
+Move until the instrument enters the target zone.
+
+Automatically detect success.
+
+Success message:
+
+"Great! You have reached the left target."
+
+Mission 3: Move Up and Down
+Objective:
+Understand vertical movement.
+
+Guided steps:
+
+Identify the upper target.
+
+Press UP until the target is reached.
+
+Identify the lower target.
+
+Press DOWN until the target is reached.
+
+Success message:
+
+"Excellent! You can control vertical movement."
+
+Mission 4: Move Forward and Backward
+Objective:
+Understand depth movement.
+
+Guided steps:
+
+Identify the far target.
+
+Press FORWARD until the target is reached.
+
+Identify the near target.
+
+Press BACKWARD until the target is reached.
+
+Success message:
+
+"Excellent! You can control instrument depth."
+
+Mission 5: Combined Movement
+Objective:
+Introduce combined horizontal and vertical movement.
+
+Guided steps:
+
+Identify the final target.
+
+Move horizontally and vertically using the directional controls.
+
+Reach the target while avoiding obstacles.
+
+Automatically detect success.
+
+Success message:
+
+"Well done! You have completed Basic Instrument Control."
+
+12. Task 2: Object Manipulation
+Objective:
+
+Introduce the basic principles of robotic gripping and object manipulation.
+
+Create a simple virtual workspace containing:
+
+One colored object.
+
+Robotic instrument with gripper.
+
+Starting position.
+
+Destination zone.
+
+Clearly visible object and target.
+
+This task contains five missions.
+
+Mission 1: Approach Object
+Objective:
+Move the instrument tip toward the object.
+
+Guided steps:
+
+Identify the object.
+
+Move the instrument toward the object.
+
+Stop when the gripper reaches the grasping zone.
+
+Success message:
+
+"Object reached. Ready to grasp."
+
+Mission 2: Grasp Object
+Objective:
+Close the robotic gripper around the object.
+
+Guided steps:
+
+Confirm the instrument is inside the grasping zone.
+
+Press CLOSE GRIPPER.
+
+Attach the object to the gripper.
+
+Confirm successful grasping.
+
+Success message:
+
+"Object successfully grasped!"
+
+The object should follow the gripper after successful grasping.
+
+Mission 3: Lift Object
+Objective:
+Move the grasped object upward.
+
+Guided steps:
+
+Identify the required lifting height.
+
+Press UP.
+
+Move the object to the designated height.
+
+Automatically detect success.
+
+Success message:
+
+"Object lifted successfully!"
+
+Mission 4: Transfer Object
+Objective:
+Move the object to the destination zone.
+
+Guided steps:
+
+Identify the destination.
+
+Move horizontally and in depth.
+
+Keep the object attached to the gripper.
+
+Enter the destination zone.
+
+Success message:
+
+"Object successfully transferred!"
+
+Mission 5: Release Object
+Objective:
+Release the object inside the destination zone.
+
+Guided steps:
+
+Confirm the object is inside the destination zone.
+
+Press OPEN GRIPPER.
+
+Detach the object.
+
+Confirm that it remains inside the destination zone.
+
+Success message:
+
+"Congratulations! You have completed Object Manipulation."
+
+The object should remain at its released position.
+
+13. Mission Engine
+Implement a reusable mission engine.
+
+Each mission should be defined using structured data rather than hard-coded UI logic.
+
+A mission definition should contain:
+
+Mission ID.
+
+Mission title.
+
+Description.
+
+Instructions.
+
+Sequential steps.
+
+Required controls.
+
+Target definitions.
+
+Success conditions.
+
+Scoring rules.
+
+The mission engine must support:
+
+Starting a mission.
+
+Pausing.
+
+Resuming.
+
+Resetting.
+
+Tracking the current step.
+
+Checking success conditions.
+
+Advancing automatically.
+
+Completing a mission.
+
+Recording mission results.
+
+The same mission engine should support both tasks.
+
+Do not duplicate the mission progression logic for Task 1 and Task 2.
+
+14. Success Detection
+Implement automatic success detection.
+
+Examples:
+
+Right or left movement: instrument tip enters the corresponding target zone.
+
+Up or down movement: instrument reaches the target height.
+
+Forward or backward movement: instrument reaches the required depth.
+
+Combined movement: instrument reaches the target without entering an obstacle zone.
+
+Grasping: gripper closes while the tip is within the grasping zone.
+
+Lifting: object reaches the required height while attached.
+
+Transfer: object enters the destination zone.
+
+Release: gripper opens and object remains inside the destination zone.
+
+Use configurable position tolerances.
+
+Success conditions should be evaluated using the simulation state, not visual appearance alone.
+
+Provide a clear visual indication of success.
+
+15. Progress Tracking and Scoring
+Each task contains five missions.
+
+Scoring:
+
+10 points per completed mission.
+
+50 points maximum per task.
+
+100 points maximum across both tasks.
+
+Scoring should prioritize mission completion and accuracy rather than speed.
+
+Do not excessively penalize students for failed attempts.
+
+Track:
+
+Completed missions.
+
+Current mission.
+
+Score.
+
+Number of attempts.
+
+Completion time.
+
+Best result.
+
+Latest result.
+
+Task Completion Screen
+When all five missions are completed, display:
+
+TASK COMPLETED!
+
+Include:
+
+Five completed mission names.
+
+Individual mission scores.
+
+Total score out of 50.
+
+Completion time.
+
+Number of attempts.
+
+Best result.
+
+Latest result.
+
+Provide two buttons:
+
+REDO TASK.
+
+BACK TO TASK MENU.
+
+Redo behavior
+When a student selects REDO TASK:
+
+Reset robot position.
+
+Reset instrument position.
+
+Reset gripper state.
+
+Reset objects.
+
+Reset mission progression.
+
+Start a new attempt.
+
+Retain previous attempt records in localStorage.
+
+Store best and latest results separately.
+
+16. Local Data Storage
+Use browser localStorage.
+
+No backend or database is required.
+
+Store:
+
+Task completion status.
+
+Mission completion status.
+
+Best scores.
+
+Latest scores.
+
+Completion times.
+
+Attempt history.
+
+Use a versioned data structure so that future application updates can migrate stored data safely.
+
+Requirements:
+
+Save data automatically.
+
+Restore progress after page refresh.
+
+Handle missing or corrupted localStorage data safely.
+
+Provide a Clear Progress option with confirmation.
+
+Do not store personal or sensitive student information.
+
+Each browser profile should have its own independent records.
+
+Explain that progress is stored locally and may not transfer to another browser or device.
+
+17. Visual Design
+Create a modern medical education interface.
+
+Visual style
+White or very light background.
+
+Soft blue and teal accents.
+
+Clear typography.
+
+Rounded panels.
+
+Subtle shadows.
+
+Large touchscreen buttons.
+
+Minimal visual clutter.
+
+Professional medical education appearance.
+
+Doctor View
+Use a dark endoscopic environment with clearly visible instrument and targets.
+
+Robot View
+Use a clean, simplified 3D robot with distinguishable components.
+
+Instructions
+Use a high-contrast instruction panel.
+
+The current instruction should be easy to read from a tablet screen.
+
+Animations
+Use subtle animation for:
+
+Robot movement.
+
+Highlighted controls.
+
+Target feedback.
+
+Success messages.
+
+Avoid unnecessary transitions or distracting effects.
+
+Provide optional sound and mute controls.
+
+Respect device reduced-motion preferences.
+
+18. Performance and iPad Optimization
+The application must run smoothly in modern Safari and Chrome.
+
+Requirements:
+
+Responsive design.
+
+Touch-friendly controls.
+
+Efficient 3D rendering.
+
+Avoid unnecessarily high polygon counts.
+
+Optimize geometry and materials.
+
+Avoid excessive React re-rendering during continuous movement.
+
+Use an appropriate animation loop.
+
+Clean up animation loops and event listeners.
+
+Stop movement immediately when touch or mouse input ends.
+
+Handle touch cancellation and pointer loss safely.
+
+Pause or reduce rendering when the application is not visible.
+
+Avoid unnecessary network requests.
+
+Provide a graceful fallback message if WebGL is unavailable.
+
+Test on an actual iPad where possible.
+
+19. Suggested Project Structure
+Organize the application into reusable components.
+
+surgical-robotics-simulator/
+│
+├── app/
+│   ├── page.tsx
+│   ├── layout.tsx
+│   └── globals.css
+│
+├── components/
+│   ├── WelcomeScreen.tsx
+│   ├── TaskSelection.tsx
+│   ├── TaskCard.tsx
+│   ├── DoctorView.tsx
+│   ├── RobotView.tsx
+│   ├── RobotArm3D.tsx
+│   ├── ControlPanel.tsx
+│   ├── InstructionPanel.tsx
+│   ├── MissionProgress.tsx
+│   └── CompletionScreen.tsx
+│
+├── simulation/
+│   ├── robotModel.ts
+│   ├── robotState.ts
+│   ├── forwardKinematics.ts
+│   ├── inverseKinematics.ts
+│   ├── robotController.ts
+│   ├── collisionDetection.ts
+│   └── simulationConfig.ts
+│
+├── missions/
+│   ├── task1.ts
+│   ├── task2.ts
+│   ├── missionEngine.ts
+│   └── successConditions.ts
+│
+├── hooks/
+│   ├── useRobotSimulation.ts
+│   ├── useMissionEngine.ts
+│   └── useLocalProgress.ts
+│
+├── types/
+│   ├── robot.ts
+│   ├── mission.ts
+│   └── progress.ts
+│
+├── public/
+│   ├── models/
+│   ├── textures/
+│   └── sounds/
+│
+└── package.json
+The project structure may be adjusted when technically appropriate, but maintain clear separation between UI, robot simulation, mission logic, and local storage.
+
+20. Development Plan
+Develop the application incrementally.
+
+Phase 1: Application Foundation
+Initialize Next.js project.
+
+Configure TypeScript.
+
+Implement responsive layout.
+
+Create Welcome Screen.
+
+Create Task Selection Screen.
+
+Implement navigation.
+
+Phase 2: Robot Visualization
+Build simplified 3D robotic arm.
+
+Implement robot joint model.
+
+Implement forward kinematics.
+
+Create Doctor View.
+
+Synchronize both views.
+
+Phase 3: Robot Controls
+Implement directional controls.
+
+Implement continuous press-and-hold movement.
+
+Implement immediate stop on release.
+
+Implement gripper controls.
+
+Add workspace limits.
+
+Phase 4: Guided Instruction System
+Create reusable instruction panel.
+
+Implement sequential steps.
+
+Add pulsing controls.
+
+Add highlighted targets.
+
+Implement success notifications.
+
+Add automatic step progression.
+
+Phase 5: Mission Implementation
+Implement all five Task 1 missions.
+
+Implement all five Task 2 missions.
+
+Implement automatic success detection.
+
+Test mission progression.
+
+Phase 6: Scoring and Progress
+Implement scoring.
+
+Implement attempt tracking.
+
+Implement completion summaries.
+
+Implement localStorage.
+
+Implement redo and reset functions.
+
+Phase 7: Optimization and Testing
+Test desktop.
+
+Test iPad landscape.
+
+Test tablet portrait.
+
+Test touchscreen behavior.
+
+Test simultaneous independent users.
+
+Test page refresh and progress recovery.
+
+Optimize 3D rendering.
+
+Phase 8: Deployment
+Prepare production build.
+
+Deploy to Vercel.
+
+Test the public website.
+
+Verify that multiple students can access and operate independent simulations simultaneously.
+
+21. Acceptance Criteria
+The project is considered complete when all of the following requirements are satisfied.
+
+Application
+Website opens without login.
+
+Welcome Screen is functional.
+
+Both tasks are available.
+
+Responsive iPad interface works.
+
+Robot Simulation
+3D robotic arm is visible.
+
+Doctor View is visible.
+
+Both views share the same robot state.
+
+All six directional movements work.
+
+Gripper opens and closes.
+
+Object manipulation works.
+
+Guided Learning
+Instructions appear sequentially.
+
+Required control pulses gently.
+
+Target is highlighted.
+
+Success is detected automatically.
+
+Next instruction appears automatically.
+
+Students can review instructions and retry.
+
+Missions
+All five Task 1 missions work.
+
+All five Task 2 missions work.
+
+Mission progression works correctly.
+
+Mission completion is recorded.
+
+Scoring
+Each mission awards up to 10 points.
+
+Each task awards up to 50 points.
+
+Total possible score is 100 points.
+
+Completion summary is displayed.
+
+Redo Task works correctly.
+
+Independent Sessions
+No login is required.
+
+No database is required.
+
+Each browser has independent simulation state.
+
+Progress is saved locally.
+
+Refreshing the page does not erase saved progress.
+
+Multiple students can use the website simultaneously without interfering with each other.
+
+Deployment
+Production build succeeds.
+
+Website is accessible through Vercel.
+
+Application works in Safari and Chrome.
+
+iPad touchscreen operation is verified.
+
+22. Instructions to the AI Development Agent
+Act as a senior full-stack developer with experience in Next.js, React Three Fiber, Three.js, TypeScript, and interactive educational simulations.
+
+Build this project as a complete, functional web application rather than a static UI prototype.
+
+Follow these instructions:
+
+Start by creating the project foundation and implementing the complete application structure.
+
+Use TypeScript and maintain clean, reusable components.
+
+Implement the actual robot movement and simulation logic.
+
+Ensure that Doctor View and Robot View are synchronized through a shared simulation state.
+
+Implement all ten missions with working success conditions.
+
+Make the guided instruction system functional, not merely decorative.
+
+Ensure touchscreen interactions work reliably on iPad.
+
+Implement local progress storage.
+
+Do not add unnecessary authentication, backend, database, or cloud simulation services.
+
+Do not use placeholder buttons for required functionality.
+
+Do not claim a feature is complete until it has been implemented and tested.
+
+Keep the application simple for medical students and avoid unnecessary engineering complexity.
+
+Development execution strategy
+Do not attempt to generate the entire application in one enormous code block.
+
+Work in manageable implementation phases.
+
+For each phase:
+
+Explain what will be implemented.
+
+Create the necessary files.
+
+Provide complete working code.
+
+Explain how to run and test the phase.
+
+Identify any incomplete functionality.
+
+Verify that the existing application still runs before moving to the next phase.
+
+Maintain a working application throughout development.
+
+Final objective: Deliver a fully functional, responsive, browser-based educational surgical robotics simulator that allows multiple medical students to independently practice robotic instrument control and object manipulation using their own iPads or computers, without requiring accounts, a backend, or a database.

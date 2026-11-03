@@ -1,0 +1,6 @@
+{
+  "name": "Surgical Robotics Simulation",
+  "description": "An interactive, web-based educational simulation inspired by the da Vinci 5 robotic surgical system for medical students to master instrument control and manipulation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
