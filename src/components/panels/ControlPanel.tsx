@@ -108,10 +108,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               onPointerCancel={() => handlePointerCancel('forward')}
               className={`w-full h-[47%] rounded-t-full flex flex-col items-center justify-center transition-all shadow-xs active:scale-95 touch-none pt-1 ${
                 activeDirection === 'forward'
-                  ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300'
+                  ? 'bg-teal-700 text-white shadow-md ring-2 ring-teal-400'
                   : isHighlighted('forward')
-                  ? 'bg-indigo-500 text-white ring-2 ring-indigo-300 animate-pulse'
-                  : 'bg-white hover:bg-slate-50 text-slate-800 border-b border-slate-200'
+                  ? 'bg-teal-600 text-white ring-2 ring-teal-300 animate-pulse'
+                  : 'bg-white hover:bg-teal-50 text-slate-800 border-b border-slate-200'
               }`}
               title="Move Forward into Depth"
             >
@@ -122,7 +122,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </button>
 
             {/* Center Dial Hub */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-200 border-2 border-white shadow-xs flex flex-col items-center justify-center z-10 pointer-events-none text-slate-600">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-200 border-2 border-white shadow-xs flex flex-col items-center justify-center z-10 pointer-events-none text-slate-700">
               <span className="text-[8px] font-mono font-black leading-none">DEPTH</span>
             </div>
 
@@ -133,10 +133,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               onPointerCancel={() => handlePointerCancel('backward')}
               className={`w-full h-[47%] rounded-b-full flex flex-col items-center justify-center transition-all shadow-xs active:scale-95 touch-none pb-1 ${
                 activeDirection === 'backward'
-                  ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300'
+                  ? 'bg-teal-700 text-white shadow-md ring-2 ring-teal-400'
                   : isHighlighted('backward')
-                  ? 'bg-indigo-500 text-white ring-2 ring-indigo-300 animate-pulse'
-                  : 'bg-white hover:bg-slate-50 text-slate-800 border-t border-slate-200'
+                  ? 'bg-teal-600 text-white ring-2 ring-teal-300 animate-pulse'
+                  : 'bg-white hover:bg-teal-50 text-slate-800 border-t border-slate-200'
               }`}
               title="Retract Backward"
             >
@@ -227,10 +227,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
             <button
               onClick={onShowInstructionAgain}
-              className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors flex items-center gap-1"
+              className="px-2 py-1 text-[10px] font-bold rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 transition-colors flex items-center gap-1"
               title="Show hint"
             >
-              <HelpCircle className="w-3 h-3 text-sky-600" />
+              <HelpCircle className="w-3 h-3 text-emerald-700" />
               <span>Hint</span>
             </button>
 
@@ -280,10 +280,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               onPointerCancel={() => handlePointerCancel('up')}
               className={`absolute top-1 left-1/2 -translate-x-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all shadow-xs active:scale-95 touch-none z-10 ${
                 activeDirection === 'up'
-                  ? 'bg-sky-600 text-white shadow-md ring-2 ring-sky-300'
+                  ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-300'
                   : isHighlighted('up')
-                  ? 'bg-sky-500 text-white ring-2 ring-sky-300 animate-pulse'
-                  : 'bg-white hover:bg-slate-50 text-slate-800 border border-slate-200'
+                  ? 'bg-emerald-500 text-white ring-2 ring-emerald-300 animate-pulse'
+                  : 'bg-white hover:bg-emerald-50 text-slate-800 border border-slate-200'
               }`}
               title="Move Up"
             >
@@ -297,10 +297,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               onPointerCancel={() => handlePointerCancel('down')}
               className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all shadow-xs active:scale-95 touch-none z-10 ${
                 activeDirection === 'down'
-                  ? 'bg-sky-600 text-white shadow-md ring-2 ring-sky-300'
+                  ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-300'
                   : isHighlighted('down')
-                  ? 'bg-sky-500 text-white ring-2 ring-sky-300 animate-pulse'
-                  : 'bg-white hover:bg-slate-50 text-slate-800 border border-slate-200'
+                  ? 'bg-emerald-500 text-white ring-2 ring-emerald-300 animate-pulse'
+                  : 'bg-white hover:bg-emerald-50 text-slate-800 border border-slate-200'
               }`}
               title="Move Down"
             >
@@ -314,10 +314,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               onPointerCancel={() => handlePointerCancel('left')}
               className={`absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all shadow-xs active:scale-95 touch-none z-10 ${
                 activeDirection === 'left'
-                  ? 'bg-sky-600 text-white shadow-md ring-2 ring-sky-300'
+                  ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-300'
                   : isHighlighted('left')
-                  ? 'bg-sky-500 text-white ring-2 ring-sky-300 animate-pulse'
-                  : 'bg-white hover:bg-slate-50 text-slate-800 border border-slate-200'
+                  ? 'bg-emerald-500 text-white ring-2 ring-emerald-300 animate-pulse'
+                  : 'bg-white hover:bg-emerald-50 text-slate-800 border border-slate-200'
               }`}
               title="Move Left"
             >
@@ -331,10 +331,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               onPointerCancel={() => handlePointerCancel('right')}
               className={`absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all shadow-xs active:scale-95 touch-none z-10 ${
                 activeDirection === 'right'
-                  ? 'bg-sky-600 text-white shadow-md ring-2 ring-sky-300'
+                  ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-300'
                   : isHighlighted('right')
-                  ? 'bg-sky-500 text-white ring-2 ring-sky-300 animate-pulse'
-                  : 'bg-white hover:bg-slate-50 text-slate-800 border border-slate-200'
+                  ? 'bg-emerald-500 text-white ring-2 ring-emerald-300 animate-pulse'
+                  : 'bg-white hover:bg-emerald-50 text-slate-800 border border-slate-200'
               }`}
               title="Move Right"
             >
@@ -344,10 +344,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             {/* Center Dial Hub: Recenter */}
             <button
               onClick={onRecalibrate}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-200 hover:bg-slate-300 border-2 border-white shadow-xs flex items-center justify-center z-20 text-slate-600 active:scale-95 transition-all"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-50 hover:bg-emerald-100 border-2 border-white shadow-xs flex items-center justify-center z-20 text-emerald-800 active:scale-95 transition-all"
               title="Center Instrument Tip"
             >
-              <Crosshair className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700" />
+              <Crosshair className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-800" />
             </button>
           </div>
           <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1 font-mono">

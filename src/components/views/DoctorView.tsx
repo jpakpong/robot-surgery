@@ -76,12 +76,12 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     const container = mountRef.current;
     if (!container) return;
 
-    // 1. Scene setup
+    // 1. Scene setup: Clean, high-contrast laparoscopic cavity / phantom box environment
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a101d); // Deep surgical endoscope dark blue/black
-    scene.fog = new THREE.FogExp2(0x0a101d, 0.05);
+    scene.background = new THREE.Color(0x0f172a); // Deep neutral clinical slate (no green tint)
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.008); // Subtle clinical atmosphere
 
-    // 2. Camera: Endoscopic camera looking into the abdominal/phantom cavity
+    // 2. Camera: Endoscopic camera looking into the surgical phantom cavity
     const width = container.clientWidth || 400;
     const height = container.clientHeight || 300;
     const camera = new THREE.PerspectiveCamera(54, width / height, 0.1, 50);
@@ -117,18 +117,36 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, maxDpr));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.45; // Crisp, balanced medical endoscopy exposure
     renderer.shadowMap.enabled = !isSoftwareGl;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     container.appendChild(renderer.domElement);
 
-    // 4. Lighting: Dual Endoscopic cold LED spotlights (surgeon light sources)
-    const ambientLight = new THREE.HemisphereLight(0x2a3d5e, 0x090d16, 0.6);
+    // 4. Clinical Laparoscopic Lighting: Coaxial camera illumination + Dual Xenon/LED spotlights
+    // Real endoscopes project light directly along the optical axis of the laparoscope
+    const cameraScopeLight = new THREE.PointLight(0xffffff, 4.2, 20, 1.0);
+    cameraScopeLight.position.set(0, 0, 0.4);
+    camera.add(cameraScopeLight);
+
+    const cameraScopeSpot = new THREE.SpotLight(0xffffff, 4.8, 22, Math.PI / 2.8, 0.45, 1.0);
+    cameraScopeSpot.position.set(0, 0, 0);
+    cameraScopeSpot.target.position.set(0, -2, -6);
+    camera.add(cameraScopeSpot);
+    camera.add(cameraScopeSpot.target);
+    scene.add(camera);
+
+    // Broad surgical ambient & ceiling luminaire (neutral daylight, neutral bounce)
+    const ambientLight = new THREE.HemisphereLight(0xf8fafc, 0x1e293b, 1.5);
     scene.add(ambientLight);
 
-    const endoSpot1 = new THREE.SpotLight(0xffffff, 2.8, 14, Math.PI / 4, 0.4, 1.2);
-    endoSpot1.position.set(-1.8, 4.0, 5.0);
+    const surgicalOverhead = new THREE.DirectionalLight(0xffffff, 2.4);
+    surgicalOverhead.position.set(0, 8, 4);
+    scene.add(surgicalOverhead);
+
+    // Dual wide cold-LED surgical illuminators
+    const endoSpot1 = new THREE.SpotLight(0xffffff, 4.0, 18, Math.PI / 3, 0.4, 1.2);
+    endoSpot1.position.set(-2.0, 4.8, 5.2);
     endoSpot1.target.position.set(0, 0, 0);
     endoSpot1.castShadow = !isSoftwareGl;
     if (!isSoftwareGl) {
@@ -139,18 +157,17 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     scene.add(endoSpot1);
     scene.add(endoSpot1.target);
 
-    const endoSpot2 = new THREE.SpotLight(0x99ddff, 2.0, 14, Math.PI / 4, 0.4, 1.2);
-    endoSpot2.position.set(1.8, 4.0, 5.0);
+    const endoSpot2 = new THREE.SpotLight(0xf8fafc, 3.4, 18, Math.PI / 3, 0.4, 1.2);
+    endoSpot2.position.set(2.0, 4.8, 5.2);
     endoSpot2.target.position.set(0, 0, 0);
     scene.add(endoSpot2);
     scene.add(endoSpot2.target);
 
-    // 5. Surgical Phantom Cavity Environment
+    // 5. Surgical Phantom Cavity Environment (Anti-glare dark contrast tray for crystal-clear object visibility)
     const cavityGroup = new THREE.Group();
 
-    // Curved tissue floor
+    // Curved tissue / surgical trainer tray floor
     const floorGeo = new THREE.PlaneGeometry(9, 9, 32, 32);
-    // Add subtle organic curve
     const posAttr = floorGeo.attributes.position;
     for (let i = 0; i < posAttr.count; i++) {
       const vx = posAttr.getX(i);
@@ -161,9 +178,9 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     floorGeo.computeVertexNormals();
 
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0x1f293d,
-      roughness: 0.75,
-      metalness: 0.1,
+      color: 0x182232, // Deep matte dark slate-charcoal tray (eliminates washed-out light green, makes red/amber/cyan objects pop)
+      roughness: 0.85,
+      metalness: 0.08,
     });
     const floorMesh = new THREE.Mesh(floorGeo, floorMat);
     floorMesh.rotation.x = -Math.PI / 2;
@@ -171,8 +188,8 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     floorMesh.receiveShadow = !isSoftwareGl;
     cavityGroup.add(floorMesh);
 
-    // Surgical grid lines (training box markings)
-    const gridHelper = new THREE.GridHelper(8, 16, 0x38bdf8, 0x1e293b);
+    // Clean surgical grid lines (subtle training box markings for depth perception without glare)
+    const gridHelper = new THREE.GridHelper(8, 16, 0x475569, 0x334155);
     gridHelper.position.y = -1.18;
     cavityGroup.add(gridHelper);
 
@@ -204,12 +221,14 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     shaftMesh.castShadow = !isSoftwareGl;
     instrumentGroup.add(shaftMesh);
 
-    // Wrist knuckle joint
+    // Purple Sphere at Gripper (EndoWrist Knuckle Joint)
     const wristGeo = new THREE.SphereGeometry(0.12, 16, 16);
     const wristMat = new THREE.MeshStandardMaterial({
-      color: 0x0284c7, // da Vinci cyan accent
-      metalness: 0.8,
-      roughness: 0.25,
+      color: 0x9333ea, // Vivid surgical purple sphere at gripper
+      emissive: 0x6b21a8,
+      emissiveIntensity: 0.45,
+      metalness: 0.75,
+      roughness: 0.2,
     });
     const wristMesh = new THREE.Mesh(wristGeo, wristMat);
     instrumentGroup.add(wristMesh);
@@ -241,9 +260,9 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     instrumentGroup.add(leftJaw);
     instrumentGroup.add(rightJaw);
 
-    // Aiming laser / tip beacon
+    // Aiming laser / tip beacon sphere at gripper
     const tipBeaconGeo = new THREE.SphereGeometry(0.05, 8, 8);
-    const tipBeaconMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const tipBeaconMat = new THREE.MeshBasicMaterial({ color: 0xa855f7 }); // Purple tip sphere
     const tipBeacon = new THREE.Mesh(tipBeaconGeo, tipBeaconMat);
     instrumentGroup.add(tipBeacon);
 
@@ -409,7 +428,7 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
         tipBeaconMat.color.setHex(0xf59e0b); // Amber contact warning
         tipBeacon.scale.setScalar(1.2);
       } else {
-        tipBeaconMat.color.setHex(0x38bdf8);
+        tipBeaconMat.color.setHex(0xa855f7); // Purple beacon at gripper
         tipBeacon.scale.setScalar(1.0);
       }
 
@@ -537,30 +556,30 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
       {/* 3D Canvas Mount */}
       <div ref={mountRef} className="w-full h-full cursor-crosshair" />
 
-      {/* Endoscopic View Vignette & Lens HUD */}
-      <div className="absolute inset-0 pointer-events-none rounded-2xl ring-1 ring-inset ring-white/10 [box-shadow:inset_0_0_60px_rgba(0,0,0,0.85)]" />
+      {/* Endoscopic View Vignette & Lens HUD: softened for bright field visibility */}
+      <div className="absolute inset-0 pointer-events-none rounded-2xl ring-1 ring-inset ring-emerald-500/20 [box-shadow:inset_0_0_36px_rgba(0,0,0,0.4)]" />
 
       {/* Top HUD Badge: Endoscope POV */}
-      <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-md border border-sky-500/30 text-white shadow-lg">
+      <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-emerald-500/40 text-white shadow-lg">
         <span className="relative flex h-2.5 w-2.5">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
         </span>
-        <span className="text-xs font-semibold tracking-wide text-sky-200">DOCTOR VIEW</span>
-        <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Stereo Endoscope</span>
+        <span className="text-xs font-bold tracking-wide text-emerald-300">DOCTOR VIEW</span>
+        <span className="text-[10px] text-emerald-200/70 uppercase tracking-wider font-mono">Stereo Endoscope</span>
       </div>
 
       {/* Telemetry Corner Readout */}
-      <div className="absolute bottom-3 left-3 pointer-events-none bg-slate-900/80 backdrop-blur-sm border border-slate-700/60 rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-slate-300 flex items-center gap-3">
+      <div className="absolute bottom-3 left-3 pointer-events-none bg-slate-900/90 backdrop-blur-sm border border-emerald-800/60 rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-slate-200 flex items-center gap-3 shadow-md">
         <div>
-          <span className="text-slate-500">POS: </span>
-          <span className="text-sky-300">
+          <span className="text-emerald-400/80 font-bold">POS: </span>
+          <span className="text-emerald-200 font-bold">
             X:{tipPos.x.toFixed(1)} Y:{tipPos.y.toFixed(1)} Z:{tipPos.z.toFixed(1)}
           </span>
         </div>
-        <div className="border-l border-slate-700 pl-2">
-          <span className="text-slate-500">JAW: </span>
-          <span className={gripperRatio > 0.5 ? 'text-amber-400' : 'text-emerald-400'}>
+        <div className="border-l border-emerald-800/80 pl-2">
+          <span className="text-emerald-400/80 font-bold">JAW: </span>
+          <span className={gripperRatio > 0.5 ? 'text-amber-300 font-bold' : 'text-emerald-300 font-bold'}>
             {Math.round(gripperRatio * 100)}% {gripperRatio > 0.5 ? 'OPEN' : 'CLAMPED'}
           </span>
         </div>

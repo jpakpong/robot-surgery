@@ -45,7 +45,7 @@ export const InstructionPanel: React.FC<InstructionPanelProps> = ({
         isStepSuccess
           ? 'bg-emerald-600 text-white border-emerald-500'
           : instructionFlash
-          ? 'bg-sky-100 border-sky-400 ring-2 ring-sky-300'
+          ? 'bg-emerald-100 border-emerald-400 ring-2 ring-emerald-300'
           : 'bg-white border-slate-200 text-slate-800'
       }`}
     >
@@ -56,7 +56,7 @@ export const InstructionPanel: React.FC<InstructionPanelProps> = ({
             className={`px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider font-mono ${
               isStepSuccess
                 ? 'bg-emerald-700 text-white'
-                : 'bg-sky-100 text-sky-800'
+                : 'bg-emerald-100 text-emerald-950 border border-emerald-300'
             }`}
           >
             M{missionNumber}: {missionTitle}
@@ -64,7 +64,7 @@ export const InstructionPanel: React.FC<InstructionPanelProps> = ({
 
           <span
             className={`text-[11px] font-mono px-1.5 py-0.5 rounded ${
-              isStepSuccess ? 'bg-emerald-700/60 text-white' : 'bg-slate-100 text-slate-600'
+              isStepSuccess ? 'bg-emerald-700/60 text-white' : 'bg-slate-100 text-slate-700 font-semibold'
             }`}
           >
             Step {stepIndex + 1}/{totalSteps}
@@ -79,10 +79,10 @@ export const InstructionPanel: React.FC<InstructionPanelProps> = ({
               <span className="truncate">{stepSuccessMsg || 'Target Reached!'}</span>
             </div>
           ) : (
-            <div className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-900 truncate">
+            <div className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold text-slate-950 truncate">
               <span className="truncate">{step?.instruction}</span>
               {step?.detailedHint && (
-                <span className="hidden xl:inline text-[11px] font-normal text-slate-500 truncate">
+                <span className="hidden xl:inline text-[11px] font-medium text-slate-600 truncate">
                   ({step.detailedHint})
                 </span>
               )}
@@ -101,11 +101,11 @@ export const InstructionPanel: React.FC<InstructionPanelProps> = ({
                   i < stepIndex || (i === stepIndex && isStepSuccess)
                     ? isStepSuccess
                       ? 'bg-white w-3'
-                      : 'bg-emerald-500 w-3'
+                      : 'bg-emerald-600 w-3'
                     : i === stepIndex
                     ? isStepSuccess
                       ? 'bg-white/80 w-4'
-                      : 'bg-sky-600 w-4'
+                      : 'bg-emerald-600 w-4 ring-1 ring-emerald-300'
                     : isStepSuccess
                     ? 'bg-emerald-700 w-1.5'
                     : 'bg-slate-200 w-1.5'

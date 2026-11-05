@@ -176,12 +176,12 @@ export const RobotView: React.FC<RobotViewProps> = ({
     fillLight.position.set(-6, 8, -6);
     scene.add(fillLight);
 
-    // Theater Floor
-    const floorGeo = new THREE.PlaneGeometry(24, 24);
+    // Theater Floor - Hospital Surgical Suite Anti-Static Flooring (y = -1.8)
+    const floorGeo = new THREE.PlaneGeometry(30, 30);
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
-      roughness: 0.6,
-      metalness: 0.2,
+      color: 0x0f172a, // Deep slate surgical theater floor
+      roughness: 0.5,
+      metalness: 0.25,
     });
     const floorMesh = new THREE.Mesh(floorGeo, floorMat);
     floorMesh.rotation.x = -Math.PI / 2;
@@ -189,24 +189,75 @@ export const RobotView: React.FC<RobotViewProps> = ({
     floorMesh.receiveShadow = !isSoftwareGl;
     scene.add(floorMesh);
 
-    const grid = new THREE.GridHelper(20, 20, 0x0284c7, 0x334155);
-    grid.position.y = -1.79;
+    // Clean clinical floor grid
+    const grid = new THREE.GridHelper(26, 26, 0x10b981, 0x1e293b);
+    grid.position.y = -1.792;
     scene.add(grid);
 
+    // Demarcated Sterile Perimeter / Safety Zone Line around robot and table
+    const safetyLineGeo = new THREE.RingGeometry(5.6, 5.72, 48);
+    const safetyLineMat = new THREE.MeshBasicMaterial({
+      color: 0x059669,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.55,
+    });
+    const safetyLine = new THREE.Mesh(safetyLineGeo, safetyLineMat);
+    safetyLine.rotation.x = -Math.PI / 2;
+    safetyLine.position.set(0, -1.791, 0);
+    scene.add(safetyLine);
+
     // -------------------------------------------------------------
-    // SURGICAL WORKSPACE TABLE (Identical to Doctor View)
+    // SURGICAL WORKSPACE TABLE (Grounded to Operating Room Floor)
     // -------------------------------------------------------------
     const tableGroup = new THREE.Group();
 
+    // Table Floor Contact Ambient Occlusion Shadow
+    const tableShadowGeo = new THREE.PlaneGeometry(6.4, 6.4);
+    const tableShadowMat = new THREE.MeshBasicMaterial({
+      color: 0x020617,
+      transparent: true,
+      opacity: 0.5,
+    });
+    const tableShadow = new THREE.Mesh(tableShadowGeo, tableShadowMat);
+    tableShadow.rotation.x = -Math.PI / 2;
+    tableShadow.position.set(0, -1.795, 0);
+    tableGroup.add(tableShadow);
+
+    // Heavy Floor Pedestal Foot Plate resting firmly on the floor at y = -1.8
+    const tableFootGeo = new THREE.BoxGeometry(4.4, 0.08, 4.4);
+    const tableFootMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      metalness: 0.85,
+      roughness: 0.25,
+    });
+    const tableFoot = new THREE.Mesh(tableFootGeo, tableFootMat);
+    tableFoot.position.set(0, -1.76, 0);
+    tableFoot.receiveShadow = !isSoftwareGl;
+    tableGroup.add(tableFoot);
+
+    // Central Operating Table Hydraulic Column (telescoping column from y = -1.8 to table bottom)
+    const tablePedestalGeo = new THREE.CylinderGeometry(0.85, 0.95, 0.56, 24);
+    const tablePedestalMat = new THREE.MeshStandardMaterial({
+      color: 0x64748b,
+      metalness: 0.85,
+      roughness: 0.2,
+    });
+    const tablePedestal = new THREE.Mesh(tablePedestalGeo, tablePedestalMat);
+    tablePedestal.position.set(0, -1.48, 0);
+    tablePedestal.receiveShadow = !isSoftwareGl;
+    tablePedestal.castShadow = !isSoftwareGl;
+    tableGroup.add(tablePedestal);
+
     // Sterile Surgical Operating Table Base
-    const tableBaseGeo = new THREE.BoxGeometry(7.2, 0.5, 7.2);
+    const tableBaseGeo = new THREE.BoxGeometry(7.2, 0.4, 7.2);
     const tableBaseMat = new THREE.MeshStandardMaterial({
       color: 0x0f766e, // Surgical sterile drape teal
       roughness: 0.7,
       metalness: 0.1,
     });
     const tableBase = new THREE.Mesh(tableBaseGeo, tableBaseMat);
-    tableBase.position.set(0, -1.45, 0);
+    tableBase.position.set(0, -1.4, 0);
     tableBase.receiveShadow = !isSoftwareGl;
     tableBase.castShadow = !isSoftwareGl;
     tableGroup.add(tableBase);
@@ -214,9 +265,9 @@ export const RobotView: React.FC<RobotViewProps> = ({
     // Surgical Phantom Cavity Table Floor (identical to Doctor View at y = -1.2)
     const cavityFloorGeo = new THREE.PlaneGeometry(6.8, 6.8);
     const cavityFloorMat = new THREE.MeshStandardMaterial({
-      color: 0x1f293d,
-      roughness: 0.75,
-      metalness: 0.1,
+      color: 0x182232, // Deep matte dark slate-charcoal tray (high contrast for colored specimens)
+      roughness: 0.85,
+      metalness: 0.08,
     });
     const cavityFloor = new THREE.Mesh(cavityFloorGeo, cavityFloorMat);
     cavityFloor.rotation.x = -Math.PI / 2;
@@ -225,14 +276,14 @@ export const RobotView: React.FC<RobotViewProps> = ({
     tableGroup.add(cavityFloor);
 
     // Surgical grid markings (identical grid spacing & color as Doctor View)
-    const surgicalGrid = new THREE.GridHelper(6.8, 14, 0x38bdf8, 0x1e293b);
+    const surgicalGrid = new THREE.GridHelper(6.8, 14, 0x475569, 0x334155);
     surgicalGrid.position.y = -1.19;
     tableGroup.add(surgicalGrid);
 
     // Sterile patient drape perimeter walls
     const drapeGeo = new THREE.BoxGeometry(7.4, 0.4, 7.4);
     const drapeMat = new THREE.MeshStandardMaterial({
-      color: 0x134e4a,
+      color: 0x0f172a,
       roughness: 0.8,
     });
     const drapeBorder = new THREE.Mesh(drapeGeo, drapeMat);
@@ -373,42 +424,201 @@ export const RobotView: React.FC<RobotViewProps> = ({
     });
 
     // -------------------------------------------------------------
-    // PROCEDURAL 6-DOF ROBOTIC ARM ASSEMBLY (da Vinci 5 style)
+    // PROCEDURAL 6-DOF ROBOTIC ARM & PATIENT SIDE CART (PSC)
+    // Firmly grounded on Operating Room Floor at y = -1.8
     // -------------------------------------------------------------
     const robotGroup = new THREE.Group();
+    const cartX = -2.8;
+    const cartZ = -3.8;
 
-    // 1. Mobile Cart Base
-    const cartGeo = new THREE.CylinderGeometry(1.4, 1.6, 0.6, 32);
-    const cartMat = new THREE.MeshStandardMaterial({
-      color: 0xe2e8f0,
-      metalness: 0.4,
-      roughness: 0.3,
+    // A. Cart Ground Contact Ambient Occlusion Shadow (y = -1.794)
+    const cartShadowGeo = new THREE.PlaneGeometry(3.6, 3.6);
+    const cartShadowMat = new THREE.MeshBasicMaterial({
+      color: 0x020617,
+      transparent: true,
+      opacity: 0.6,
     });
-    const cartBase = new THREE.Mesh(cartGeo, cartMat);
-    cartBase.position.set(-2.8, 0.3, -3.8);
-    cartBase.castShadow = !isSoftwareGl;
-    robotGroup.add(cartBase);
+    const cartShadow = new THREE.Mesh(cartShadowGeo, cartShadowMat);
+    cartShadow.rotation.x = -Math.PI / 2;
+    cartShadow.position.set(cartX, -1.794, cartZ);
+    robotGroup.add(cartShadow);
 
-    // 2. Vertical Setup Column with da Vinci 5 blue LED light pipe
-    const columnGeo = new THREE.CylinderGeometry(0.38, 0.45, 3.2, 24);
+    // B. Four Heavy-Duty Dual Medical Caster Wheels (resting firmly on floor at y = -1.8)
+    const casterOffsets = [
+      { x: -0.95, z: -0.92, hasBrake: true },  // Rear Left
+      { x: 0.95, z: -0.92, hasBrake: true },   // Rear Right
+      { x: -0.95, z: 0.92, hasBrake: false },  // Front Left
+      { x: 0.95, z: 0.92, hasBrake: false },   // Front Right
+    ];
+
+    const wheelGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.08, 16);
+    wheelGeo.rotateZ(Math.PI / 2);
+    const wheelMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.8,
+      metalness: 0.2,
+    });
+    const casterHousingMat = new THREE.MeshStandardMaterial({
+      color: 0x94a3b8,
+      metalness: 0.85,
+      roughness: 0.2,
+    });
+
+    casterOffsets.forEach((pos) => {
+      // Swivel housing / fork
+      const housingGeo = new THREE.BoxGeometry(0.24, 0.2, 0.24);
+      const housing = new THREE.Mesh(housingGeo, casterHousingMat);
+      housing.position.set(cartX + pos.x, -1.58, cartZ + pos.z);
+      robotGroup.add(housing);
+
+      // Left wheel of dual caster
+      const w1 = new THREE.Mesh(wheelGeo, wheelMat);
+      w1.position.set(cartX + pos.x - 0.06, -1.64, cartZ + pos.z);
+      robotGroup.add(w1);
+
+      // Right wheel of dual caster
+      const w2 = new THREE.Mesh(wheelGeo, wheelMat);
+      w2.position.set(cartX + pos.x + 0.06, -1.64, cartZ + pos.z);
+      robotGroup.add(w2);
+
+      // Floor lock brake pedal on rear casters
+      if (pos.hasBrake) {
+        const brakeGeo = new THREE.BoxGeometry(0.06, 0.08, 0.14);
+        const brakeMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.5 });
+        const brake = new THREE.Mesh(brakeGeo, brakeMat);
+        brake.position.set(cartX + pos.x, -1.68, cartZ + pos.z - 0.14);
+        robotGroup.add(brake);
+      }
+    });
+
+    // C. Floor Stabilizer Mechanical Jacks (firmly contact floor at y = -1.8)
+    const jackGeo = new THREE.CylinderGeometry(0.12, 0.14, 0.24, 16);
+    const jackMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.7, roughness: 0.3 });
+    const jackLeft = new THREE.Mesh(jackGeo, jackMat);
+    jackLeft.position.set(cartX - 1.15, -1.68, cartZ);
+    robotGroup.add(jackLeft);
+    const jackRight = new THREE.Mesh(jackGeo, jackMat);
+    jackRight.position.set(cartX + 1.15, -1.68, cartZ);
+    robotGroup.add(jackRight);
+
+    // D. Lower Wheeled Chassis & Anti-Collision Bumper (y = -1.50)
+    const lowerChassisGeo = new THREE.BoxGeometry(2.45, 0.36, 2.35);
+    const lowerChassisMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      metalness: 0.6,
+      roughness: 0.35,
+    });
+    const lowerChassis = new THREE.Mesh(lowerChassisGeo, lowerChassisMat);
+    lowerChassis.position.set(cartX, -1.5, cartZ);
+    lowerChassis.castShadow = !isSoftwareGl;
+    lowerChassis.receiveShadow = !isSoftwareGl;
+    robotGroup.add(lowerChassis);
+
+    // E. Middle Cart Enclosure (Motor, Battery & Power Distribution Bay)
+    const midBodyGeo = new THREE.BoxGeometry(2.1, 0.96, 2.0);
+    const midBodyMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc, // da Vinci clinical white composite
+      metalness: 0.3,
+      roughness: 0.2,
+    });
+    const midBody = new THREE.Mesh(midBodyGeo, midBodyMat);
+    midBody.position.set(cartX, -0.85, cartZ);
+    midBody.castShadow = !isSoftwareGl;
+    midBody.receiveShadow = !isSoftwareGl;
+    robotGroup.add(midBody);
+
+    // Clinical Emerald Accent Stripe around cart body
+    const stripeGeo = new THREE.BoxGeometry(2.12, 0.08, 2.02);
+    const stripeMat = new THREE.MeshBasicMaterial({ color: 0x059669 });
+    const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+    stripe.position.set(cartX, -0.85, cartZ);
+    robotGroup.add(stripe);
+
+    // Lower Cooling Ventilation Louvers
+    const louverGeo = new THREE.BoxGeometry(1.6, 0.32, 0.02);
+    const louverMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
+    const louverFront = new THREE.Mesh(louverGeo, louverMat);
+    louverFront.position.set(cartX, -1.05, cartZ + 1.01);
+    robotGroup.add(louverFront);
+
+    // Rear Steering Push Handles (for circulating nurse OR transport)
+    const handleBarGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.4, 16);
+    handleBarGeo.rotateZ(Math.PI / 2);
+    const handleBarMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.2 });
+    const handleBar = new THREE.Mesh(handleBarGeo, handleBarMat);
+    handleBar.position.set(cartX, -0.55, cartZ - 1.15);
+    robotGroup.add(handleBar);
+
+    // Emergency Stop (E-Stop) Mushroom Button
+    const estopGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.06, 16);
+    const estopMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
+    const estop = new THREE.Mesh(estopGeo, estopMat);
+    estop.position.set(cartX + 0.8, -0.34, cartZ + 0.7);
+    robotGroup.add(estop);
+
+    // F. Upper Tapered Pedestal Collar & Circular LED Status Ring
+    const collarGeo = new THREE.CylinderGeometry(0.65, 1.35, 0.75, 32);
+    const collarMat = new THREE.MeshStandardMaterial({
+      color: 0xf1f5f9,
+      metalness: 0.4,
+      roughness: 0.25,
+    });
+    const collar = new THREE.Mesh(collarGeo, collarMat);
+    collar.position.set(cartX, 0.0, cartZ);
+    collar.castShadow = !isSoftwareGl;
+    robotGroup.add(collar);
+
+    // Circular Emerald LED Status Ring
+    const statusRingGeo = new THREE.TorusGeometry(0.75, 0.04, 16, 32);
+    statusRingGeo.rotateX(Math.PI / 2);
+    const statusRingMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+    const statusRing = new THREE.Mesh(statusRingGeo, statusRingMat);
+    statusRing.position.set(cartX, 0.36, cartZ);
+    robotGroup.add(statusRing);
+
+    // G. Vertical Setup Column (Boom Mast, seamless from collar up to turret at y = 3.7)
+    const columnGeo = new THREE.CylinderGeometry(0.40, 0.46, 3.3, 24);
     const columnMat = new THREE.MeshStandardMaterial({
       color: 0xf8fafc,
       metalness: 0.5,
       roughness: 0.25,
     });
     const column = new THREE.Mesh(columnGeo, columnMat);
-    column.position.set(-2.8, 2.0, -3.8);
+    column.position.set(cartX, 2.05, cartZ);
     column.castShadow = !isSoftwareGl;
     robotGroup.add(column);
 
-    const ledGeo = new THREE.CylinderGeometry(0.4, 0.4, 2.6, 16, 1, true, -Math.PI / 6, Math.PI / 3);
+    // Medical Emerald LED column channel strip
+    const ledGeo = new THREE.CylinderGeometry(0.42, 0.42, 2.7, 16, 1, true, -Math.PI / 6, Math.PI / 3);
     const ledMat = new THREE.MeshBasicMaterial({
-      color: 0x00d2ff,
+      color: 0x10b981,
       side: THREE.DoubleSide,
     });
     const ledStrip = new THREE.Mesh(ledGeo, ledMat);
     ledStrip.position.copy(column.position);
     robotGroup.add(ledStrip);
+
+    // H. Auxiliary Nurse / Tech Touchscreen Display Console
+    const monitorArmGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.55, 12);
+    monitorArmGeo.rotateZ(Math.PI / 3);
+    const monitorArmMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.8 });
+    const monitorArm = new THREE.Mesh(monitorArmGeo, monitorArmMat);
+    monitorArm.position.set(cartX + 0.45, 1.85, cartZ + 0.25);
+    robotGroup.add(monitorArm);
+
+    const monitorGeo = new THREE.BoxGeometry(0.04, 0.45, 0.65);
+    const monitorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
+    const monitor = new THREE.Mesh(monitorGeo, monitorMat);
+    monitor.position.set(cartX + 0.72, 1.95, cartZ + 0.4);
+    monitor.rotation.y = -Math.PI / 5;
+    robotGroup.add(monitor);
+
+    const screenGeo = new THREE.PlaneGeometry(0.6, 0.4);
+    const screenMat = new THREE.MeshBasicMaterial({ color: 0x064e3b });
+    const screen = new THREE.Mesh(screenGeo, screenMat);
+    screen.position.set(cartX + 0.745, 1.95, cartZ + 0.4);
+    screen.rotation.y = Math.PI / 2 - Math.PI / 5;
+    robotGroup.add(screen);
 
     // 3. Rotating Turret (Joint 1: Base Yaw)
     const turretGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.45, 24);
@@ -424,7 +634,7 @@ export const RobotView: React.FC<RobotViewProps> = ({
     // 4. Shoulder Joint Assembly (Joint 2: Shoulder Pitch)
     const shoulderKnuckleGeo = new THREE.SphereGeometry(0.42, 20, 20);
     const shoulderKnuckleMat = new THREE.MeshStandardMaterial({
-      color: 0x0284c7,
+      color: 0x059669,
       metalness: 0.8,
       roughness: 0.2,
     });
@@ -468,7 +678,7 @@ export const RobotView: React.FC<RobotViewProps> = ({
     // 8. Carriage
     const carriageGeo = new THREE.BoxGeometry(0.45, 0.65, 0.5);
     const carriageMat = new THREE.MeshStandardMaterial({
-      color: 0x0284c7,
+      color: 0x059669,
       metalness: 0.7,
       roughness: 0.3,
     });
@@ -486,10 +696,12 @@ export const RobotView: React.FC<RobotViewProps> = ({
     instrumentShaft.castShadow = !isSoftwareGl;
     robotGroup.add(instrumentShaft);
 
-    // 10. EndoWrist Distal Micro-Joint
+    // 10. EndoWrist Distal Micro-Joint (Purple Sphere at Gripper)
     const wristBallGeo = new THREE.SphereGeometry(0.09, 12, 12);
     const wristBallMat = new THREE.MeshStandardMaterial({
-      color: 0x0284c7,
+      color: 0x9333ea, // Vivid surgical purple sphere at gripper
+      emissive: 0x6b21a8,
+      emissiveIntensity: 0.45,
       metalness: 0.8,
     });
     const wristBall = new THREE.Mesh(wristBallGeo, wristBallMat);
@@ -510,7 +722,7 @@ export const RobotView: React.FC<RobotViewProps> = ({
 
     // Tip beacon for contact and collision indication
     const tipBeaconGeo = new THREE.SphereGeometry(0.05, 8, 8);
-    const tipBeaconMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const tipBeaconMat = new THREE.MeshBasicMaterial({ color: 0xa855f7 }); // Purple tip sphere
     const tipBeacon = new THREE.Mesh(tipBeaconGeo, tipBeaconMat);
     robotGroup.add(tipBeacon);
 
@@ -571,7 +783,7 @@ export const RobotView: React.FC<RobotViewProps> = ({
         tipBeaconMat.color.setHex(0xf59e0b);
         tipBeacon.scale.setScalar(1.2);
       } else {
-        tipBeaconMat.color.setHex(0x38bdf8);
+        tipBeaconMat.color.setHex(0xa855f7); // Purple beacon at gripper
         tipBeacon.scale.setScalar(1.0);
       }
 
@@ -712,29 +924,29 @@ export const RobotView: React.FC<RobotViewProps> = ({
       <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
 
       {/* Top HUD Badge: 3D Robot Arm */}
-      <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-md border border-cyan-500/30 text-white shadow-lg">
-        <span className="h-2 w-2 rounded-full bg-cyan-400"></span>
-        <span className="text-xs font-semibold tracking-wide text-cyan-200">ROBOT VIEW</span>
-        <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Synchronized Field</span>
+      <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md border border-emerald-500/40 text-white shadow-lg">
+        <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+        <span className="text-xs font-bold tracking-wide text-emerald-300">ROBOT VIEW</span>
+        <span className="text-[10px] text-emerald-200/70 uppercase tracking-wider font-mono">Synchronized Field</span>
       </div>
 
       {/* Telemetry Corner Readout */}
-      <div className="absolute bottom-3 left-3 pointer-events-none bg-slate-900/80 backdrop-blur-sm border border-slate-700/60 rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-slate-300 flex items-center gap-3">
+      <div className="absolute bottom-3 left-3 pointer-events-none bg-slate-900/90 backdrop-blur-sm border border-emerald-800/60 rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-slate-200 flex items-center gap-3 shadow-md">
         <div>
-          <span className="text-slate-500">ARM TIP: </span>
-          <span className="text-cyan-300">
+          <span className="text-emerald-400/80 font-bold">ARM TIP: </span>
+          <span className="text-emerald-200 font-bold">
             X:{tipPos.x.toFixed(1)} Y:{tipPos.y.toFixed(1)} Z:{tipPos.z.toFixed(1)}
           </span>
         </div>
       </div>
 
       {/* Camera View Angle Presets */}
-      <div className="absolute top-3 right-3 flex items-center gap-1 bg-slate-950/80 backdrop-blur-md p-1 rounded-xl border border-slate-700/60 shadow-lg">
+      <div className="absolute top-3 right-3 flex items-center gap-1 bg-slate-950/85 backdrop-blur-md p-1 rounded-xl border border-emerald-800/50 shadow-lg">
         <button
           onClick={() => applyPreset('iso')}
-          className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
+          className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
             activePreset === 'iso'
-              ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40'
+              ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
               : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
           }`}
           title="Isometric View"
@@ -744,9 +956,9 @@ export const RobotView: React.FC<RobotViewProps> = ({
         </button>
         <button
           onClick={() => applyPreset('side')}
-          className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
+          className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
             activePreset === 'side'
-              ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40'
+              ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
               : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
           }`}
           title="Side Profile"
@@ -756,9 +968,9 @@ export const RobotView: React.FC<RobotViewProps> = ({
         </button>
         <button
           onClick={() => applyPreset('top')}
-          className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
+          className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
             activePreset === 'top'
-              ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40'
+              ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
               : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
           }`}
           title="Top Down"

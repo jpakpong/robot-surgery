@@ -36,26 +36,42 @@ export const TaskIntroModal: React.FC<TaskIntroModalProps> = ({
             <span>Task Menu</span>
           </button>
 
-          <span className="text-xs font-bold uppercase tracking-wider text-sky-700 bg-sky-50 px-3 py-1 rounded-full border border-sky-200">
+          <span
+            className={`text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full border ${
+              taskId === 1
+                ? 'text-emerald-900 bg-emerald-50 border-emerald-200'
+                : taskId === 2
+                ? 'text-amber-950 bg-amber-100 border-amber-300'
+                : 'text-purple-900 bg-purple-50 border-purple-200'
+            }`}
+          >
             Task {taskId} Briefing
           </span>
         </div>
 
         <div className="flex items-center gap-3.5 mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100 shrink-0">
+          <div
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 ${
+              taskId === 1
+                ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                : taskId === 2
+                ? 'bg-amber-100 text-amber-800 border-amber-300'
+                : 'bg-purple-100 text-purple-700 border-purple-300'
+            }`}
+          >
             {taskId === 1 ? (
               <Compass className="w-6 h-6" />
             ) : taskId === 2 ? (
               <Grab className="w-6 h-6" />
             ) : (
-              <Layers className="w-6 h-6 text-purple-600" />
+              <Layers className="w-6 h-6" />
             )}
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-slate-900">
+            <h3 className="text-2xl font-bold text-slate-950">
               {taskTitle}
             </h3>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-slate-600 font-semibold">
               {taskId === 3
                 ? '3 Progressive Missions • 50 Points Max (10 + 20 + 20 PTS)'
                 : '5 Guided Missions • 10 Points per Mission • 50 Points Max'}
@@ -63,7 +79,7 @@ export const TaskIntroModal: React.FC<TaskIntroModalProps> = ({
           </div>
         </div>
 
-        <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+        <p className="text-sm text-slate-700 mb-6 leading-relaxed font-medium">
           {taskId === 1
             ? 'Master fundamental laparoscopic maneuvers. You will practice navigating along lateral (X), vertical (Y), and depth (Z) axes to position the robotic surgical instrument inside target zones.'
             : taskId === 2
@@ -73,22 +89,22 @@ export const TaskIntroModal: React.FC<TaskIntroModalProps> = ({
 
         {/* Missions Checklist Preview */}
         <div className="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
             Mission Sequence
           </h4>
           <div className="space-y-2.5">
             {missions.map((m, idx) => (
               <div key={m.id} className="flex items-start justify-between gap-2.5 text-xs sm:text-sm">
                 <div className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-sky-100 text-sky-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-900 font-black text-xs flex items-center justify-center shrink-0 mt-0.5 border border-emerald-200">
                     {idx + 1}
                   </span>
                   <div>
-                    <span className="font-semibold text-slate-800">{m.title}: </span>
-                    <span className="text-slate-500">{m.shortDescription}</span>
+                    <span className="font-bold text-slate-900">{m.title}: </span>
+                    <span className="text-slate-600 font-medium">{m.shortDescription}</span>
                   </div>
                 </div>
-                <span className="font-mono font-bold text-emerald-600 text-xs shrink-0 mt-0.5 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                <span className="font-mono font-bold text-emerald-700 text-xs shrink-0 mt-0.5 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                   +{m.points} pts
                 </span>
               </div>
@@ -97,17 +113,23 @@ export const TaskIntroModal: React.FC<TaskIntroModalProps> = ({
         </div>
 
         {/* Controls Reminder Note */}
-        <div className="bg-sky-50/70 rounded-2xl p-3.5 mb-6 border border-sky-200/60 text-xs text-sky-900 flex items-center gap-2.5">
-          <Check className="w-4 h-4 text-sky-600 shrink-0" />
+        <div className="bg-emerald-50/90 rounded-2xl p-3.5 mb-6 border border-emerald-200/90 text-xs text-emerald-950 flex items-center gap-2.5 font-medium">
+          <Check className="w-4 h-4 text-emerald-700 shrink-0" />
           <span>
-            <strong>Touch & Mouse Support:</strong> Press and hold buttons to move; release to stop. Highlighted buttons show what to press next.
+            <strong className="font-bold text-emerald-950">Touch & Mouse Support:</strong> Press and hold buttons to move; release to stop. Highlighted buttons show what to press next.
           </span>
         </div>
 
         {/* Start Button */}
         <button
           onClick={onStartSimulation}
-          className="w-full py-4 px-6 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg shadow-sky-600/25 transition-all active:scale-98"
+          className={`w-full py-4 px-6 rounded-2xl text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg transition-all active:scale-98 ${
+            taskId === 1
+              ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25'
+              : taskId === 2
+              ? 'bg-amber-800 hover:bg-amber-900 shadow-amber-900/25'
+              : 'bg-purple-600 hover:bg-purple-700 shadow-purple-600/25'
+          }`}
         >
           <span>Begin Simulation</span>
           <ArrowRight className="w-5 h-5" />

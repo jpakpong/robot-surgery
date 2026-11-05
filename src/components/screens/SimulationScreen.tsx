@@ -228,7 +228,7 @@ export const SimulationScreen: React.FC<SimulationScreenProps> = ({
           </button>
 
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <h1 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight leading-none truncate max-w-[200px] sm:max-w-none">
               {taskTitle}
             </h1>
@@ -246,20 +246,20 @@ export const SimulationScreen: React.FC<SimulationScreenProps> = ({
                 onClick={() => switchMission(idx)}
                 className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1 ${
                   isCurrent
-                    ? 'bg-white text-sky-700 shadow-2xs font-bold'
+                    ? 'bg-white text-emerald-800 shadow-2xs font-bold border border-emerald-200'
                     : isDone
-                    ? 'text-emerald-700 hover:bg-white/60'
-                    : 'text-slate-400 hover:text-slate-700'
+                    ? 'text-emerald-800 hover:bg-white/60 font-medium'
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
                 title={m.title}
               >
                 <span
                   className={`w-3.5 h-3.5 rounded-full text-[9px] flex items-center justify-center font-bold ${
                     isCurrent
-                      ? 'bg-sky-600 text-white'
+                      ? 'bg-emerald-600 text-white'
                       : isDone
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-slate-300 text-slate-600'
+                      ? 'bg-emerald-700 text-white'
+                      : 'bg-slate-300 text-slate-700'
                   }`}
                 >
                   {idx + 1}
@@ -274,11 +274,11 @@ export const SimulationScreen: React.FC<SimulationScreenProps> = ({
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Student Name & ID Badge shown right before score box */}
           {progress.studentInfo?.fullName && (
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 text-[11px] font-semibold border border-slate-200/80 truncate max-w-[130px] sm:max-w-xs">
-              <User className="w-3 h-3 text-sky-600 shrink-0" />
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-900 text-[11px] font-bold border border-emerald-200 truncate max-w-[130px] sm:max-w-xs shadow-2xs">
+              <User className="w-3 h-3 text-emerald-700 shrink-0" />
               <span className="truncate">{progress.studentInfo.fullName}</span>
               {progress.studentInfo.studentId && (
-                <span className="text-slate-400 font-mono text-[10px] shrink-0 hidden sm:inline">
+                <span className="text-emerald-800/80 font-mono text-[10px] shrink-0 hidden sm:inline">
                   • ID: {progress.studentInfo.studentId}
                 </span>
               )}

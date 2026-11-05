@@ -109,26 +109,26 @@ export const OverallCompletionModal: React.FC<OverallCompletionModalProps> = ({
         </p>
 
         {/* Student Credential Badge */}
-        <div className="bg-sky-50/70 border border-sky-200/80 rounded-2xl p-3.5 mb-5 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl p-3.5 mb-5 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shadow-xs shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center shadow-xs shrink-0">
               <UserCheck className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] text-sky-700 font-bold uppercase tracking-wider block font-mono">
+              <span className="text-[10px] text-emerald-900 font-bold uppercase tracking-wider block font-mono">
                 Student Name - Surname
               </span>
-              <span className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+              <span className="text-base sm:text-lg font-black text-slate-950 leading-tight">
                 {studentName}
               </span>
             </div>
           </div>
 
-          <div className="border-t sm:border-t-0 sm:border-l border-sky-200/80 pt-2 sm:pt-0 sm:pl-4">
-            <span className="text-[10px] text-sky-700 font-bold uppercase tracking-wider block font-mono">
+          <div className="border-t sm:border-t-0 sm:border-l border-emerald-200/90 pt-2 sm:pt-0 sm:pl-4">
+            <span className="text-[10px] text-emerald-900 font-bold uppercase tracking-wider block font-mono">
               Student ID
             </span>
-            <span className="text-base sm:text-lg font-black text-slate-900 font-mono leading-tight">
+            <span className="text-base sm:text-lg font-black text-slate-950 font-mono leading-tight">
               {studentId}
             </span>
           </div>
@@ -137,27 +137,27 @@ export const OverallCompletionModal: React.FC<OverallCompletionModalProps> = ({
         {/* Aggregate Metrics Grid */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-slate-50 rounded-2xl p-3 sm:p-4 mb-5 border border-slate-100 text-center">
           <div className="flex flex-col items-center">
-            <span className="text-[11px] text-slate-400 font-medium">Combined Score</span>
-            <span className="text-2xl sm:text-3xl font-black text-emerald-600 mt-0.5">
+            <span className="text-[11px] text-slate-500 font-bold uppercase">Combined Score</span>
+            <span className="text-2xl sm:text-3xl font-black text-emerald-700 mt-0.5">
               {totalScore} / 150
             </span>
-            <span className="text-[10px] text-slate-400">100% Complete</span>
+            <span className="text-[10px] text-slate-500 font-medium">100% Complete</span>
           </div>
 
           <div className="flex flex-col items-center border-x border-slate-200">
-            <span className="text-[11px] text-slate-400 font-medium">Combined Time</span>
-            <span className="text-2xl sm:text-3xl font-black text-slate-800 font-mono mt-0.5">
+            <span className="text-[11px] text-slate-500 font-bold uppercase">Combined Time</span>
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono mt-0.5">
               {formatTime(totalTime)}
             </span>
-            <span className="text-[10px] text-slate-400">All 3 Modules</span>
+            <span className="text-[10px] text-slate-500 font-medium">All 3 Modules</span>
           </div>
 
           <div className="flex flex-col items-center">
-            <span className="text-[11px] text-slate-400 font-medium">Total Attempts</span>
-            <span className="text-2xl sm:text-3xl font-black text-sky-600 mt-0.5">
+            <span className="text-[11px] text-slate-500 font-bold uppercase">Total Attempts</span>
+            <span className="text-2xl sm:text-3xl font-black text-emerald-700 mt-0.5">
               #{totalAttempts}
             </span>
-            <span className="text-[10px] text-slate-400">Recorded Locally</span>
+            <span className="text-[10px] text-slate-500 font-medium">Recorded Locally</span>
           </div>
         </div>
 
@@ -167,7 +167,7 @@ export const OverallCompletionModal: React.FC<OverallCompletionModalProps> = ({
           {/* Task 1 Card */}
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-sky-700 uppercase tracking-wider">
+              <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
                 Task 1: Control
               </span>
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -186,13 +186,13 @@ export const OverallCompletionModal: React.FC<OverallCompletionModalProps> = ({
             </div>
           </div>
 
-          {/* Task 2 Card */}
+          {/* Task 2 Card (Brown) */}
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-teal-700 uppercase tracking-wider">
+              <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">
                 Task 2: Grasp
               </span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-amber-800" />
             </div>
             <div className="flex items-baseline justify-between text-xs">
               <span className="text-slate-500">Missions:</span>
@@ -208,13 +208,13 @@ export const OverallCompletionModal: React.FC<OverallCompletionModalProps> = ({
             </div>
           </div>
 
-          {/* Task 3 Card */}
+          {/* Task 3 Card (Purple) */}
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-purple-700 uppercase tracking-wider">
+              <span className="text-xs font-bold text-purple-900 uppercase tracking-wider">
                 Task 3: Sorting
               </span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-purple-700" />
             </div>
             <div className="flex items-baseline justify-between text-xs">
               <span className="text-slate-500">Missions:</span>
@@ -237,7 +237,7 @@ export const OverallCompletionModal: React.FC<OverallCompletionModalProps> = ({
           <div className="flex flex-col sm:flex-row gap-2.5">
             <button
               onClick={onClose}
-              className="flex-1 py-3 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
+              className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98"
             >
               <Home className="w-4 h-4" />
               <span>Return to Task Menu</span>

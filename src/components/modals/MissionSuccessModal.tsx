@@ -84,8 +84,8 @@ export const MissionSuccessModal: React.FC<MissionSuccessModalProps> = ({
           </div>
 
           <div className="flex flex-col items-center justify-center border-l border-slate-200">
-            <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-sky-500" />
+            <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5 text-emerald-600" />
               Duration
             </span>
             <span className="text-2xl font-black text-slate-800 font-mono mt-0.5">
@@ -99,7 +99,7 @@ export const MissionSuccessModal: React.FC<MissionSuccessModalProps> = ({
           {hasNextMission ? (
             <button
               onClick={onNextMission}
-              className="w-full py-3.5 px-4 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-98"
+              className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-98"
             >
               <span>Continue to Mission {missionNumber + 1}</span>
               <ArrowRight className="w-4 h-4" />
