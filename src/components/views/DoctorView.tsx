@@ -123,45 +123,58 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
 
     container.appendChild(renderer.domElement);
 
-    // 4. Clinical Laparoscopic Lighting: Coaxial camera illumination + Dual Xenon/LED spotlights
-    // Real endoscopes project light directly along the optical axis of the laparoscope
-    const cameraScopeLight = new THREE.PointLight(0xffffff, 4.2, 20, 1.0);
-    cameraScopeLight.position.set(0, 0, 0.4);
-    camera.add(cameraScopeLight);
+    // 4. Clinical Laparoscopic Lighting: Twin Coaxial Fiber-Optic Bundles + Auxiliary Trocar Illuminators
+    // In real surgical laparoscopes (e.g. da Vinci 3DHD / Karl Storz), light is piped through twin optical fiber bundles flanking the stereo lenses
+    const leftFiberLight = new THREE.PointLight(0xffffff, 2.8, 16, 1.0);
+    leftFiberLight.position.set(-0.24, 0, 0.35);
+    camera.add(leftFiberLight);
 
-    const cameraScopeSpot = new THREE.SpotLight(0xffffff, 4.8, 22, Math.PI / 2.8, 0.45, 1.0);
-    cameraScopeSpot.position.set(0, 0, 0);
-    cameraScopeSpot.target.position.set(0, -2, -6);
-    camera.add(cameraScopeSpot);
-    camera.add(cameraScopeSpot.target);
+    const leftFiberSpot = new THREE.SpotLight(0xffffff, 3.4, 20, Math.PI / 3.0, 0.42, 1.0);
+    leftFiberSpot.position.set(-0.24, 0, 0);
+    leftFiberSpot.target.position.set(-0.1, -1.8, -5.5);
+    camera.add(leftFiberSpot);
+    camera.add(leftFiberSpot.target);
+
+    const rightFiberLight = new THREE.PointLight(0xffffff, 2.8, 16, 1.0);
+    rightFiberLight.position.set(0.24, 0, 0.35);
+    camera.add(rightFiberLight);
+
+    const rightFiberSpot = new THREE.SpotLight(0xffffff, 3.4, 20, Math.PI / 3.0, 0.42, 1.0);
+    rightFiberSpot.position.set(0.24, 0, 0);
+    rightFiberSpot.target.position.set(0.1, -1.8, -5.5);
+    camera.add(rightFiberSpot);
+    camera.add(rightFiberSpot.target);
+
     scene.add(camera);
 
-    // Broad surgical ambient & ceiling luminaire (neutral daylight, neutral bounce)
-    const ambientLight = new THREE.HemisphereLight(0xf8fafc, 0x1e293b, 1.5);
+    // Broad surgical cavity ambient luminaire (5700K surgical daylight fill)
+    const ambientLight = new THREE.HemisphereLight(0xf8fafc, 0x1e293b, 1.4);
     scene.add(ambientLight);
 
-    const surgicalOverhead = new THREE.DirectionalLight(0xffffff, 2.4);
+    // Primary Surgical Operating Table Overhead Luminaire
+    const surgicalOverhead = new THREE.DirectionalLight(0xffffff, 2.2);
     surgicalOverhead.position.set(0, 8, 4);
     scene.add(surgicalOverhead);
 
-    // Dual wide cold-LED surgical illuminators
-    const endoSpot1 = new THREE.SpotLight(0xffffff, 4.0, 18, Math.PI / 3, 0.4, 1.2);
-    endoSpot1.position.set(-2.0, 4.8, 5.2);
-    endoSpot1.target.position.set(0, 0, 0);
-    endoSpot1.castShadow = !isSoftwareGl;
+    // Auxiliary Trocar Port Illuminator 1 (Left Lateral Cannula Trans-Illumination)
+    const auxTrocarSpot1 = new THREE.SpotLight(0xf0fdf4, 3.6, 16, Math.PI / 3.2, 0.4, 1.2);
+    auxTrocarSpot1.position.set(-2.5, 4.5, 4.5);
+    auxTrocarSpot1.target.position.set(0, -1.2, 0);
+    auxTrocarSpot1.castShadow = !isSoftwareGl;
     if (!isSoftwareGl) {
-      endoSpot1.shadow.mapSize.width = 512;
-      endoSpot1.shadow.mapSize.height = 512;
-      endoSpot1.shadow.bias = -0.001;
+      auxTrocarSpot1.shadow.mapSize.width = 512;
+      auxTrocarSpot1.shadow.mapSize.height = 512;
+      auxTrocarSpot1.shadow.bias = -0.001;
     }
-    scene.add(endoSpot1);
-    scene.add(endoSpot1.target);
+    scene.add(auxTrocarSpot1);
+    scene.add(auxTrocarSpot1.target);
 
-    const endoSpot2 = new THREE.SpotLight(0xf8fafc, 3.4, 18, Math.PI / 3, 0.4, 1.2);
-    endoSpot2.position.set(2.0, 4.8, 5.2);
-    endoSpot2.target.position.set(0, 0, 0);
-    scene.add(endoSpot2);
-    scene.add(endoSpot2.target);
+    // Auxiliary Trocar Port Illuminator 2 (Right Lateral Cannula Trans-Illumination)
+    const auxTrocarSpot2 = new THREE.SpotLight(0xf8fafc, 2.8, 16, Math.PI / 3.2, 0.4, 1.2);
+    auxTrocarSpot2.position.set(2.5, 4.5, 4.5);
+    auxTrocarSpot2.target.position.set(0, -1.2, 0);
+    scene.add(auxTrocarSpot2);
+    scene.add(auxTrocarSpot2.target);
 
     // 5. Surgical Phantom Cavity Environment (Anti-glare dark contrast tray for crystal-clear object visibility)
     const cavityGroup = new THREE.Group();
@@ -204,6 +217,38 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
     const trocarPos = SIMULATION_CONFIG.trocarPort;
     trocarMesh.position.set(trocarPos.x, trocarPos.y, trocarPos.z);
     cavityGroup.add(trocarMesh);
+
+    // Lateral Auxiliary Cannula Trocar Ports (Left & Right Trans-Illumination Ports)
+    const auxTrocarGeo = new THREE.CylinderGeometry(0.16, 0.2, 0.45, 16);
+    const auxTrocarMat = new THREE.MeshStandardMaterial({
+      color: 0x94a3b8,
+      metalness: 0.8,
+      roughness: 0.25,
+    });
+    const auxTrocarLensMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xf0fdf4,
+      emissiveIntensity: 0.8,
+      roughness: 0.2,
+    });
+
+    const leftAuxTrocar = new THREE.Mesh(auxTrocarGeo, auxTrocarMat);
+    leftAuxTrocar.position.set(-2.5, 3.6, 1.2);
+    leftAuxTrocar.rotation.z = 0.28;
+    cavityGroup.add(leftAuxTrocar);
+
+    const leftAuxLens = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 16), auxTrocarLensMat);
+    leftAuxLens.position.set(-2.5, 3.38, 1.2);
+    cavityGroup.add(leftAuxLens);
+
+    const rightAuxTrocar = new THREE.Mesh(auxTrocarGeo, auxTrocarMat);
+    rightAuxTrocar.position.set(2.5, 3.6, 1.2);
+    rightAuxTrocar.rotation.z = -0.28;
+    cavityGroup.add(rightAuxTrocar);
+
+    const rightAuxLens = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 16), auxTrocarLensMat);
+    rightAuxLens.position.set(2.5, 3.38, 1.2);
+    cavityGroup.add(rightAuxLens);
 
     scene.add(cavityGroup);
 
@@ -567,6 +612,13 @@ export const DoctorView: React.FC<DoctorViewProps> = ({
         </span>
         <span className="text-xs font-bold tracking-wide text-emerald-300">DOCTOR VIEW</span>
         <span className="text-[10px] text-emerald-200/70 uppercase tracking-wider font-mono">Stereo Endoscope</span>
+      </div>
+
+      {/* Light Source Telemetry Badge */}
+      <div className="absolute top-3 right-3 pointer-events-none hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 backdrop-blur-md border border-emerald-500/30 text-slate-300 text-[10px] font-mono shadow-md">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        <span className="text-emerald-300 font-semibold">5700K SURGICAL COLD LED</span>
+        <span className="text-slate-400">• STEREO COAXIAL</span>
       </div>
 
       {/* Telemetry Corner Readout */}

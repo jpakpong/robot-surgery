@@ -158,23 +158,279 @@ export const RobotView: React.FC<RobotViewProps> = ({
     controls.update();
     controlsRef.current = controls;
 
-    // Lighting
-    const hemiLight = new THREE.HemisphereLight(0x93c5fd, 0x1e293b, 0.85);
+    // -------------------------------------------------------------
+    // OPERATING THEATER LIGHTING & SURGICAL LUMINAIRE BOOM ASSEMBLY
+    // -------------------------------------------------------------
+    // Diffuse hospital operating room sky/ground ambient
+    const hemiLight = new THREE.HemisphereLight(0xe2e8f0, 0x1e293b, 1.05);
     scene.add(hemiLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 2.2);
-    dirLight.position.set(8, 14, 8);
-    dirLight.castShadow = !isSoftwareGl;
-    if (!isSoftwareGl) {
-      dirLight.shadow.mapSize.width = 512;
-      dirLight.shadow.mapSize.height = 512;
-      dirLight.shadow.bias = -0.0005;
-    }
-    scene.add(dirLight);
+    // General operating room fill luminaire
+    const roomFillLight = new THREE.DirectionalLight(0x93c5fd, 0.65);
+    roomFillLight.position.set(-8, 10, -8);
+    scene.add(roomFillLight);
 
-    const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.8);
-    fillLight.position.set(-6, 8, -6);
-    scene.add(fillLight);
+    // Common surgical focal target (center of operative phantom table)
+    const surgicalTarget = new THREE.Object3D();
+    surgicalTarget.position.set(0, -1.18, 0);
+    scene.add(surgicalTarget);
+
+    // Dual-Head Ceiling Surgical Operating Luminaire Boom Assembly
+    const luminaireGroup = new THREE.Group();
+
+    const luminaireWhiteMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc,
+      roughness: 0.28,
+      metalness: 0.12,
+    });
+    const luminaireMetalMat = new THREE.MeshStandardMaterial({
+      color: 0x94a3b8,
+      roughness: 0.25,
+      metalness: 0.8,
+    });
+    const luminaireChromeMat = new THREE.MeshStandardMaterial({
+      color: 0xe2e8f0,
+      roughness: 0.15,
+      metalness: 0.92,
+    });
+    const faceplateMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.6,
+      metalness: 0.4,
+    });
+    const luminaireLedMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xf8fafc,
+      emissiveIntensity: 0.95,
+      roughness: 0.1,
+    });
+    const ledPodGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.025, 12);
+
+    // Ceiling Mount Flange (grounded at ceiling height y = 6.75)
+    const ceilingFlangeGeo = new THREE.CylinderGeometry(0.5, 0.55, 0.1, 32);
+    const ceilingFlange = new THREE.Mesh(ceilingFlangeGeo, luminaireWhiteMat);
+    ceilingFlange.position.set(0.3, 6.75, 0.2);
+    luminaireGroup.add(ceilingFlange);
+
+    // Vertical Central Drop Column
+    const dropColumnGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.5, 24);
+    const dropColumn = new THREE.Mesh(dropColumnGeo, luminaireChromeMat);
+    dropColumn.position.set(0.3, 5.95, 0.2);
+    luminaireGroup.add(dropColumn);
+
+    // Central Rotation Pivot Collar / Dual Swivel Hub
+    const pivotHubGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.32, 24);
+    const pivotHub = new THREE.Mesh(pivotHubGeo, luminaireWhiteMat);
+    pivotHub.position.set(0.3, 5.2, 0.2);
+    luminaireGroup.add(pivotHub);
+
+    // Helper to build an articulated structural boom arm between two points
+    const createBoomArm = (pA: THREE.Vector3, pB: THREE.Vector3, radius: number = 0.045) => {
+      const armGroup = new THREE.Group();
+      const dist = pA.distanceTo(pB);
+      const armGeo = new THREE.CylinderGeometry(radius, radius, dist, 16);
+      const armMesh = new THREE.Mesh(armGeo, luminaireWhiteMat);
+      const dir = pB.clone().sub(pA).normalize();
+      const mid = pA.clone().add(pB).multiplyScalar(0.5);
+      armMesh.position.copy(mid);
+      armMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+      armGroup.add(armMesh);
+      return armGroup;
+    };
+
+    // ==========================================================
+    // 1. PRIMARY MASTER SURGICAL LIGHTHEAD (Left Anterior Vector)
+    // ==========================================================
+    const hubPos1 = new THREE.Vector3(0.3, 5.28, 0.2);
+    const elbowPos1 = new THREE.Vector3(-0.6, 5.35, 0.8);
+    const headPos1 = new THREE.Vector3(-1.5, 4.8, 1.3);
+
+    luminaireGroup.add(createBoomArm(hubPos1, elbowPos1, 0.05));
+
+    // Spring Counterbalance Box at Arm Knuckle
+    const springBoxGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.26, 16);
+    const springBox1 = new THREE.Mesh(springBoxGeo, luminaireMetalMat);
+    springBox1.position.copy(elbowPos1);
+    springBox1.rotation.z = Math.PI / 4;
+    luminaireGroup.add(springBox1);
+
+    luminaireGroup.add(createBoomArm(elbowPos1, headPos1, 0.04));
+
+    // Direction vector aimed directly at operative phantom table
+    const targetVector1 = surgicalTarget.position.clone().sub(headPos1).normalize();
+    const headQuat1 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), targetVector1);
+
+    const masterHeadGroup = new THREE.Group();
+    masterHeadGroup.position.copy(headPos1);
+
+    // Gimbal Suspension Yoke Bracket
+    const yokeGeo = new THREE.TorusGeometry(0.72, 0.032, 12, 24, Math.PI);
+    const yokeMesh = new THREE.Mesh(yokeGeo, luminaireMetalMat);
+    yokeMesh.rotation.x = Math.PI / 2;
+    masterHeadGroup.add(yokeMesh);
+
+    // Lamp Head Housing
+    const dishHousingGroup = new THREE.Group();
+    dishHousingGroup.quaternion.copy(headQuat1);
+
+    const dishBackGeo = new THREE.CylinderGeometry(0.66, 0.72, 0.12, 32);
+    const dishBack = new THREE.Mesh(dishBackGeo, luminaireWhiteMat);
+    dishHousingGroup.add(dishBack);
+
+    // Recessed Dark Metal Bezel
+    const dishBezelGeo = new THREE.CylinderGeometry(0.73, 0.73, 0.03, 32);
+    const dishBezel = new THREE.Mesh(dishBezelGeo, luminaireMetalMat);
+    dishBezel.position.y = -0.065;
+    dishHousingGroup.add(dishBezel);
+
+    // Circular Multi-LED Reflector Faceplate
+    const faceplateGeo = new THREE.CylinderGeometry(0.68, 0.68, 0.02, 32);
+    const faceplateMesh = new THREE.Mesh(faceplateGeo, faceplateMat);
+    faceplateMesh.position.y = -0.075;
+    dishHousingGroup.add(faceplateMesh);
+
+    // Concentric Rings of Patterned Daylight Surgical LED Pods
+    const addMasterLedRing = (radius: number, count: number) => {
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2;
+        const ledMesh = new THREE.Mesh(ledPodGeo, luminaireLedMat);
+        ledMesh.position.set(Math.cos(angle) * radius, -0.082, Math.sin(angle) * radius);
+        dishHousingGroup.add(ledMesh);
+      }
+    };
+    addMasterLedRing(0.20, 6);
+    addMasterLedRing(0.38, 12);
+    addMasterLedRing(0.55, 18);
+
+    // Central Sterilizable Guide Handle
+    const handleGeo = new THREE.CylinderGeometry(0.032, 0.035, 0.22, 16);
+    const handleMesh = new THREE.Mesh(handleGeo, luminaireMetalMat);
+    handleMesh.position.y = -0.18;
+    dishHousingGroup.add(handleMesh);
+
+    // Sterile Positioning Rim Ring
+    const rimRingGeo = new THREE.TorusGeometry(0.75, 0.02, 16, 48);
+    const rimRing = new THREE.Mesh(rimRingGeo, luminaireMetalMat);
+    rimRing.rotation.x = Math.PI / 2;
+    rimRing.position.y = -0.03;
+    dishHousingGroup.add(rimRing);
+
+    masterHeadGroup.add(dishHousingGroup);
+    luminaireGroup.add(masterHeadGroup);
+
+    // Master High-Output Surgical SpotLight
+    const masterSpot = new THREE.SpotLight(0xffffff, 4.0, 24, Math.PI / 6.2, 0.35, 1.0);
+    masterSpot.position.copy(headPos1);
+    masterSpot.target = surgicalTarget;
+    masterSpot.castShadow = !isSoftwareGl;
+    if (!isSoftwareGl) {
+      masterSpot.shadow.mapSize.width = 512;
+      masterSpot.shadow.mapSize.height = 512;
+      masterSpot.shadow.bias = -0.0005;
+    }
+    scene.add(masterSpot);
+
+    // Master Translucent Volumetric Light Cone
+    const dist1 = headPos1.distanceTo(surgicalTarget.position);
+    const cone1Geo = new THREE.ConeGeometry(dist1 * Math.tan(Math.PI / 6.5), dist1, 24, 1, true);
+    const cone1Mat = new THREE.MeshBasicMaterial({
+      color: 0xf8fafc,
+      transparent: true,
+      opacity: 0.045,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const cone1Mesh = new THREE.Mesh(cone1Geo, cone1Mat);
+    cone1Mesh.position.copy(headPos1).add(surgicalTarget.position).multiplyScalar(0.5);
+    cone1Mesh.quaternion.copy(headQuat1);
+    luminaireGroup.add(cone1Mesh);
+
+    // ==========================================================
+    // 2. SECONDARY SATELLITE LIGHTHEAD (Shadowless Opposing Vector)
+    // ==========================================================
+    const hubPos2 = new THREE.Vector3(0.3, 5.12, 0.2);
+    const elbowPos2 = new THREE.Vector3(0.9, 5.2, -0.5);
+    const headPos2 = new THREE.Vector3(1.7, 4.6, -1.1);
+
+    luminaireGroup.add(createBoomArm(hubPos2, elbowPos2, 0.045));
+
+    const springBox2 = new THREE.Mesh(springBoxGeo, luminaireMetalMat);
+    springBox2.position.copy(elbowPos2);
+    springBox2.rotation.z = -Math.PI / 4;
+    luminaireGroup.add(springBox2);
+
+    luminaireGroup.add(createBoomArm(elbowPos2, headPos2, 0.038));
+
+    const targetVector2 = surgicalTarget.position.clone().sub(headPos2).normalize();
+    const headQuat2 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), targetVector2);
+
+    const satHeadGroup = new THREE.Group();
+    satHeadGroup.position.copy(headPos2);
+
+    const yoke2Geo = new THREE.TorusGeometry(0.56, 0.028, 12, 24, Math.PI);
+    const yoke2Mesh = new THREE.Mesh(yoke2Geo, luminaireMetalMat);
+    yoke2Mesh.rotation.x = Math.PI / 2;
+    satHeadGroup.add(yoke2Mesh);
+
+    const satHousingGroup = new THREE.Group();
+    satHousingGroup.quaternion.copy(headQuat2);
+
+    const satDishBackGeo = new THREE.CylinderGeometry(0.50, 0.55, 0.10, 32);
+    const satDishBack = new THREE.Mesh(satDishBackGeo, luminaireWhiteMat);
+    satHousingGroup.add(satDishBack);
+
+    const satFaceplateGeo = new THREE.CylinderGeometry(0.52, 0.52, 0.02, 32);
+    const satFaceplateMesh = new THREE.Mesh(satFaceplateGeo, faceplateMat);
+    satFaceplateMesh.position.y = -0.06;
+    satHousingGroup.add(satFaceplateMesh);
+
+    const addSatLedRing = (radius: number, count: number) => {
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2;
+        const ledMesh = new THREE.Mesh(ledPodGeo, luminaireLedMat);
+        ledMesh.position.set(Math.cos(angle) * radius, -0.068, Math.sin(angle) * radius);
+        satHousingGroup.add(ledMesh);
+      }
+    };
+    addSatLedRing(0.18, 6);
+    addSatLedRing(0.36, 12);
+
+    const satHandleGeo = new THREE.CylinderGeometry(0.028, 0.032, 0.18, 16);
+    const satHandleMesh = new THREE.Mesh(satHandleGeo, luminaireMetalMat);
+    satHandleMesh.position.y = -0.15;
+    satHousingGroup.add(satHandleMesh);
+
+    const satRimRingGeo = new THREE.TorusGeometry(0.58, 0.018, 16, 48);
+    const satRimRing = new THREE.Mesh(satRimRingGeo, luminaireMetalMat);
+    satRimRing.rotation.x = Math.PI / 2;
+    satRimRing.position.y = -0.02;
+    satHousingGroup.add(satRimRing);
+
+    satHeadGroup.add(satHousingGroup);
+    luminaireGroup.add(satHeadGroup);
+
+    // Satellite SpotLight (eliminates harsh surgeon/robot shadows)
+    const satSpot = new THREE.SpotLight(0xf0fdf4, 3.0, 22, Math.PI / 5.8, 0.4, 1.0);
+    satSpot.position.copy(headPos2);
+    satSpot.target = surgicalTarget;
+    scene.add(satSpot);
+
+    // Satellite Translucent Volumetric Light Cone
+    const dist2 = headPos2.distanceTo(surgicalTarget.position);
+    const cone2Geo = new THREE.ConeGeometry(dist2 * Math.tan(Math.PI / 6.0), dist2, 24, 1, true);
+    const cone2Mat = new THREE.MeshBasicMaterial({
+      color: 0xf0fdf4,
+      transparent: true,
+      opacity: 0.038,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const cone2Mesh = new THREE.Mesh(cone2Geo, cone2Mat);
+    cone2Mesh.position.copy(headPos2).add(surgicalTarget.position).multiplyScalar(0.5);
+    cone2Mesh.quaternion.copy(headQuat2);
+    luminaireGroup.add(cone2Mesh);
+
+    scene.add(luminaireGroup);
 
     // Theater Floor - Hospital Surgical Suite Anti-Static Flooring (y = -1.8)
     const floorGeo = new THREE.PlaneGeometry(30, 30);
@@ -940,44 +1196,51 @@ export const RobotView: React.FC<RobotViewProps> = ({
         </div>
       </div>
 
-      {/* Camera View Angle Presets */}
-      <div className="absolute top-3 right-3 flex items-center gap-1 bg-slate-950/85 backdrop-blur-md p-1 rounded-xl border border-emerald-800/50 shadow-lg">
-        <button
-          onClick={() => applyPreset('iso')}
-          className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
-            activePreset === 'iso'
-              ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
-          title="Isometric View"
-        >
-          <Compass className="w-3.5 h-3.5" />
-          <span>Iso</span>
-        </button>
-        <button
-          onClick={() => applyPreset('side')}
-          className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
-            activePreset === 'side'
-              ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
-          title="Side Profile"
-        >
-          <Eye className="w-3.5 h-3.5" />
-          <span>Side</span>
-        </button>
-        <button
-          onClick={() => applyPreset('top')}
-          className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
-            activePreset === 'top'
-              ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
-          title="Top Down"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Top</span>
-        </button>
+      {/* Camera View Angle Presets & Surgical Luminaire Status */}
+      <div className="absolute top-3 right-3 flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/85 backdrop-blur-md border border-emerald-800/50 text-[10px] font-mono text-slate-300 shadow-lg">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span className="text-emerald-300 font-semibold">DUAL CEILING LUMINAIRES</span>
+          <span className="text-slate-400">• 5700K SHADOWLESS</span>
+        </div>
+        <div className="flex items-center gap-1 bg-slate-950/85 backdrop-blur-md p-1 rounded-xl border border-emerald-800/50 shadow-lg">
+          <button
+            onClick={() => applyPreset('iso')}
+            className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
+              activePreset === 'iso'
+                ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+            title="Isometric View"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span>Iso</span>
+          </button>
+          <button
+            onClick={() => applyPreset('side')}
+            className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
+              activePreset === 'side'
+                ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+            title="Side Profile"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Side</span>
+          </button>
+          <button
+            onClick={() => applyPreset('top')}
+            className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
+              activePreset === 'top'
+                ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+            title="Top Down"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Top</span>
+          </button>
+        </div>
       </div>
 
       {/* Red Flash Collision Border & Vignette */}
