@@ -92,8 +92,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   const isHighlighted = (key: ControlKey) => requiredControl === key;
 
   return (
-    <div className="w-full bg-white border border-slate-200/90 rounded-2xl shadow-xs px-3 py-2 sm:px-4 sm:py-2.5 select-none shrink-0">
-      <div className="flex items-center justify-between gap-3 max-w-5xl mx-auto">
+    <div className="w-full bg-white border border-slate-200/90 rounded-2xl shadow-xs px-3 py-2 sm:px-4 sm:py-2 select-none shrink-0">
+      <div className="flex items-center justify-center gap-3 sm:gap-5 md:gap-7 max-w-4xl mx-auto">
 
         {/* -------------------------------------------------------------
             LEFT CIRCLE: RESIZED DEPTH PENDANT (FORWARD / BACKWARD)
@@ -106,7 +106,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               onPointerDown={(e) => handlePointerDown('forward', e)}
               onPointerUp={(e) => handlePointerUp('forward', e)}
               onPointerCancel={() => handlePointerCancel('forward')}
-              className={`w-full h-[47%] rounded-t-full flex flex-col items-center justify-center transition-all shadow-xs active:scale-95 touch-none pt-1 ${
+              className={`w-full h-[47%] rounded-t-full flex items-center justify-center transition-all shadow-xs active:scale-95 touch-none pb-1 ${
                 activeDirection === 'forward'
                   ? 'bg-teal-700 text-white shadow-md ring-2 ring-teal-400'
                   : isHighlighted('forward')
@@ -115,10 +115,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               }`}
               title="Move Forward into Depth"
             >
-              <ChevronsUp className="w-5 h-5 stroke-[2.5]" />
-              <span className="text-[9px] font-black uppercase font-mono tracking-wider leading-none">
-                FWD
-              </span>
+              <ChevronsUp className="w-6 h-6 stroke-[2.5]" />
             </button>
 
             {/* Center Dial Hub */}
@@ -131,7 +128,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               onPointerDown={(e) => handlePointerDown('backward', e)}
               onPointerUp={(e) => handlePointerUp('backward', e)}
               onPointerCancel={() => handlePointerCancel('backward')}
-              className={`w-full h-[47%] rounded-b-full flex flex-col items-center justify-center transition-all shadow-xs active:scale-95 touch-none pb-1 ${
+              className={`w-full h-[47%] rounded-b-full flex items-center justify-center transition-all shadow-xs active:scale-95 touch-none pt-1 ${
                 activeDirection === 'backward'
                   ? 'bg-teal-700 text-white shadow-md ring-2 ring-teal-400'
                   : isHighlighted('backward')
@@ -140,10 +137,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
               }`}
               title="Retract Backward"
             >
-              <span className="text-[9px] font-black uppercase font-mono tracking-wider leading-none">
-                BACK
-              </span>
-              <ChevronsDown className="w-5 h-5 stroke-[2.5]" />
+              <ChevronsDown className="w-6 h-6 stroke-[2.5]" />
             </button>
           </div>
           <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1 font-mono">
@@ -154,7 +148,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         {/* -------------------------------------------------------------
             CENTER: GRIPPER CONTROLS + COMPACT UTILITY TOOLBAR
            ------------------------------------------------------------- */}
-        <div className="flex-1 max-w-sm flex flex-col items-center px-1">
+        <div className="w-56 sm:w-64 flex flex-col items-center px-1 shrink-0">
           
           {/* Gripper Actuation Row */}
           <div className="w-full flex items-center justify-between gap-1 mb-1">
