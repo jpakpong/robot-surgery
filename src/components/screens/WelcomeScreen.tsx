@@ -4,19 +4,19 @@
  * to surgical robotics, dual perspectives, and iPad touchscreen controls.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Play,
   Activity,
   Layers,
   Touchpad,
   ShieldCheck,
-  ChevronRight,
   RotateCcw,
   Sparkles,
   User,
 } from 'lucide-react';
 import { StudentInfo } from '../../types/simulation';
+import surgicalBackdropImg from '../../assets/images/surgical_robotics_backdrop_1794539557177.jpg';
 
 interface WelcomeScreenProps {
   onStart: () => void;
@@ -32,11 +32,31 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   studentInfo,
 }) => {
   const hasStudent = !!studentInfo?.fullName?.trim();
+  const [imgFailed, setImgFailed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+    <div className="relative min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between selection:bg-emerald-500 selection:text-white overflow-x-hidden">
+      {/* Transparent Surgical Robotics Background Image + Measured Clinical Scrim */}
+      <div
+        className="fixed inset-0 pointer-events-none select-none z-0 overflow-hidden"
+        aria-hidden="true"
+      >
+        {!imgFailed ? (
+          <img
+            src={surgicalBackdropImg}
+            alt="Modern surgical robotics operating theater"
+            referrerPolicy="no-referrer"
+            onError={() => setImgFailed(true)}
+            className="w-full h-full object-cover object-center opacity-[0.22]"
+          />
+        ) : (
+          <div className="w-full h-full bg-[radial-gradient(circle_at_70%_35%,rgba(16,185,129,0.12),transparent_60%)]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50/80 via-slate-50/65 to-emerald-50/75" />
+      </div>
+
       {/* Top Navigation Bar */}
-      <header className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-2xs">
+      <header className="border-b border-slate-200/90 bg-white/85 backdrop-blur-md sticky top-0 z-20 shadow-2xs">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm">
@@ -80,12 +100,12 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       </header>
 
       {/* Hero Section */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex-1 flex flex-col justify-center">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex-1 flex flex-col justify-center">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           {/* Left Column: Heading & Call to action */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50/95 border border-emerald-200 text-emerald-900 text-xs font-bold shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
               <span>Designed for First-Year Medical Students</span>
             </div>
@@ -113,7 +133,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                 <Play className="w-5 h-5 fill-current" />
               </button>
 
-              <div className="flex items-center gap-2 text-xs text-slate-600 font-medium px-1">
+              <div className="flex items-center gap-2 text-xs text-slate-700 font-medium px-1">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
                 <span>Zero setup required • Runs in browser</span>
               </div>
@@ -124,7 +144,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           <div className="lg:col-span-5 space-y-4">
             
             {/* Dual Synchronized Perspectives Card */}
-            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-md space-y-4">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 border border-slate-200/80 shadow-md space-y-4">
               <div className="flex items-center gap-2.5 text-slate-900 font-bold text-sm">
                 <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
                   <Layers className="w-4 h-4" />
@@ -154,7 +174,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             </div>
 
             {/* iPad & Touch Friendly Card */}
-            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-md space-y-3">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 border border-slate-200/80 shadow-md space-y-3">
               <div className="flex items-center gap-2.5 text-slate-900 font-bold text-sm">
                 <div className="p-2 rounded-xl bg-teal-100 text-teal-700">
                   <Touchpad className="w-4 h-4" />
@@ -184,7 +204,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       </main>
 
       {/* Footer / Educational Disclaimer */}
-      <footer className="border-t border-slate-200 bg-white py-4 px-4 sm:px-6">
+      <footer className="relative z-10 border-t border-slate-200/90 bg-white/85 backdrop-blur-sm py-4 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <p>
             Educational demonstration inspired by robotic surgical systems. Designed for preclinical medical education.
